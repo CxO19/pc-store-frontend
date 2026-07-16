@@ -1,9 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
-
-// MOCK temporal hasta que el backend esté en la VPS
-const MOCK_USER = { email: 'admin@test.com', password: 'Admin123!' }
+import api from '../api/axios'
 
 export function useAuth() {
   const [loading, setLoading] = useState(false)
@@ -11,28 +9,30 @@ export function useAuth() {
 
   const login = async (email, password) => {
     setLoading(true)
-    await new Promise(r => setTimeout(r, 800)) // simula delay
-    if (email === MOCK_USER.email && password === MOCK_USER.password) {
-      localStorage.setItem('token', 'mock-token-123')
+    try {
+      const res = await api.post('/auth/login', { email, password })
+      localStorage.setItem('token', res.data.access_token)
       toast.success('Bienvenido a PC Store')
       navigate('/products')
-    } else {
+    } catch {
       toast.error('Credenciales incorrectas')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const register = async (data) => {
     setLoading(true)
-    await new Promise(r => setTimeout(r, 800))
-    if (data.password.length < 8) {
-      toast.error('La contraseña debe tener al menos 8 caracteres')
+    try {
+      await api.post('/auth/register', data)
+      toast.success('Cuenta creada, inicia sesión')
+      navigate('/')
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Error al registrarse'
+      toast.error(Array.isArray(msg) ? msg[0] : msg)
+    } finally {
       setLoading(false)
-      return
     }
-    toast.success('Cuenta creada, inicia sesión')
-    navigate('/')
-    setLoading(false)
   }
 
   const logout = () => {
