@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://40.82.180.52/api/v1',
+  baseURL: 'https://pcs-sales.uaeftt-ute.site/api/v1',
 })
 
 api.interceptors.request.use((config) => {
