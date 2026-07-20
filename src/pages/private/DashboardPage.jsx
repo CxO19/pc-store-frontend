@@ -45,7 +45,7 @@ export default function DashboardPage() {
   return (
     <Box sx={{ width: '100%', p: { xs: 2, md: 3 }, boxSizing: 'border-box' }}>
       
-      {/* --- ENCABEZADO MEJORADO (Mayor Visibilidad y Elegancia) --- */}
+      {/* --- ENCABEZADO --- */}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
         <Typography 
           variant="h4" 
@@ -64,7 +64,7 @@ export default function DashboardPage() {
         </Typography>
       </motion.div>
 
-      {/* --- TARJETAS EN FILA HORIZONTAL (CSS GRID 4 COLUMNAS) --- */}
+      {/* --- TARJETAS EN FILA HORIZONTAL (4 COLUMNAS) --- */}
       <Box 
         sx={{ 
           display: 'grid', 
@@ -125,7 +125,7 @@ export default function DashboardPage() {
         ))}
       </Box>
 
-      {/* --- SECCIÓN DE GRÁFICOS (2 COLUMNAS) --- */}
+      {/* --- SECCIÓN DE GRÁFICOS --- */}
       <Box 
         sx={{ 
           display: 'grid', 
