@@ -12,7 +12,9 @@ export function useAuth() {
     try {
       const res = await api.post('/auth/login', { email, password })
       localStorage.setItem('token', res.data.access_token)
-      localStorage.setItem('user', JSON.stringify(res.data.user))
+      // Guardar solo si existe user, si no guardar objeto vacío
+      const userData = res.data.user ? res.data.user : {}
+      localStorage.setItem('user', JSON.stringify(userData))
       toast.success('Bienvenido a PC Store')
       navigate('/dashboard')
     } catch {
