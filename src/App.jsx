@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import LoginPage from './pages/LoginPage'
-import RegisterPage from './pages/RegisterPage'
+import AuthPage from './pages/AuthPage'
 import ProductsPage from './pages/ProductsPage'
 
 function PrivateRoute({ children }) {
@@ -14,8 +13,8 @@ export default function App() {
     <BrowserRouter>
       <Toaster position="top-right" />
       <Routes>
-        <Route path="/" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/" element={<AuthPage />} />
+        <Route path="/register" element={<AuthPage />} />
         <Route path="/products" element={
           <PrivateRoute>
             <ProductsPage />
