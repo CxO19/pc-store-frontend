@@ -7,9 +7,10 @@ import ProductsPage from './pages/ProductsPage'
 import PrivateLayout from './layouts/PrivateLayout'
 import DashboardPage from './pages/private/DashboardPage'
 
+// Componente para proteger rutas privadas
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token')
-  return token ? children : <Navigate to="/login" />
+  return token ? children : <Navigate to="/login" replace />
 }
 
 export default function App() {
@@ -17,36 +18,33 @@ export default function App() {
     <BrowserRouter>
       <Toaster position="top-right" />
       <Routes>
+        {/* Rutas Públicas */}
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/productos" element={<ProductsPage />} />
 
+        {/* Rutas Privadas / Dashboard */}
         <Route
-          path="/dashboard"
           element={
             <PrivateRoute>
               <PrivateLayout />
             </PrivateRoute>
           }
         >
-          <Route index element={<DashboardPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          
+          {/* Grupo Admin */}
+          <Route path="/admin">
+            <Route index element={<DashboardPage />} />
+            <Route path="usuarios" element={<DashboardPage />} />
+            <Route path="productos" element={<DashboardPage />} />
+            <Route path="categorias" element={<DashboardPage />} />
+            <Route path="marcas" element={<DashboardPage />} />
+            <Route path="ordenes" element={<DashboardPage />} />
+          </Route>
         </Route>
-
-        <Route
-          path="/admin/*"
-          element={
-            <PrivateRoute>
-              <PrivateLayout />
-            </PrivateRoute>
-          }
-        >
-          <Route path="usuarios" element={<DashboardPage />} />
-          <Route path="productos" element={<DashboardPage />} />
-          <Route path="categorias" element={<DashboardPage />} />
-          <Route path="marcas" element={<DashboardPage />} />
-          <Route path="ordenes" element={<DashboardPage />} />
-        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   )
