@@ -15,8 +15,11 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'
 import PersonIcon from '@mui/icons-material/Person'
 import LogoutIcon from '@mui/icons-material/Logout'
 import MenuIcon from '@mui/icons-material/Menu'
+import LightModeIcon from '@mui/icons-material/LightMode'
+import DarkModeIcon from '@mui/icons-material/DarkMode'
 import { motion } from 'framer-motion'
 import { useAuth } from '../hooks/useAuth'
+import { useThemeMode } from '../theme/ThemeModeContext'
 
 const ACCENT = '#63CAAC'
 const DRAWER_WIDTH = 240
@@ -40,6 +43,7 @@ export default function PrivateLayout() {
   const { logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const { mode, toggleMode, palette } = useThemeMode()
 
   const user = (() => {
     try {
@@ -143,12 +147,29 @@ export default function PrivateLayout() {
           </ListItemIcon>
           <ListItemText primary="Cerrar sesión" primaryTypographyProps={{ fontSize: 14 }} />
         </ListItemButton>
+        <ListItemButton
+          onClick={toggleMode}
+          sx={{
+            borderRadius: 3,
+            color: 'rgba(255,255,255,0.6)',
+            mt: 1,
+            '&:hover': { bgcolor: 'rgba(99,202,172,0.1)', color: ACCENT }
+          }}
+        >
+          <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
+            {mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
+          </ListItemIcon>
+          <ListItemText
+            primary={mode === 'light' ? 'Modo oscuro' : 'Modo claro'}
+            primaryTypographyProps={{ fontSize: 14 }}
+          />
+        </ListItemButton>
       </Box>
     </Box>
   )
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(135deg, #20232a, #1a1a1a)' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', background: palette.bg }}>
 
       {/* AppBar mobile */}
       <AppBar position="fixed" elevation={0} sx={{
