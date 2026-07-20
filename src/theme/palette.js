@@ -35,8 +35,7 @@ export const palettes = {
   },
   dark: {
     mode: 'dark',
-    bg: 'linear-gradient(135deg, #0d1b2a, #132235, #162b3a, #11212e)',
-    paperBg: 'rgba(38, 58, 82, 0.9)',
+    bg: 'linear-gradient(135deg, #20232a, #1a1a1a, #20232a)',    paperBg: 'rgba(38, 58, 82, 0.9)',
     paperBorder: 'rgba(99, 202, 172, 0.15)',
     paperShadow: '0 30px 80px -12px rgba(0, 0, 0, 0.7)',
     accentGradient: 'linear-gradient(90deg, #2E9E82, #63CAAC)',

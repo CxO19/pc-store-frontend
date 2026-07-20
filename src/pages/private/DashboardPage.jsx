@@ -13,10 +13,7 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell, Legend
 } from 'recharts'
 import { useDashboard } from '../../hooks/useDashboard'
-
-const ACCENT = '#63CAAC'
-const BG_CARD = 'rgba(255, 255, 255, 0.05)'
-const BORDER = '1px solid rgba(255, 255, 255, 0.12)'
+import { useThemeMode } from '../../theme/ThemeModeContext'
 
 const statusColor = {
   pending: { label: 'Pendiente', color: 'warning' },
@@ -26,6 +23,15 @@ const statusColor = {
 
 export default function DashboardPage() {
   const { stats = {}, productsByCategory = [], ordersByStatus = [], recentOrders = [], loading } = useDashboard()
+  const { palette, mode } = useThemeMode()
+  const isLight = mode === 'light'
+
+  // Colores inteligentes adaptados para que se lean perfecto en ambos modos
+  const cardBg = isLight ? palette.paperBg : 'rgba(255, 255, 255, 0.05)'
+  const cardBorder = isLight ? palette.paperBorder : '1px solid rgba(255, 255, 255, 0.12)'
+  const mainTitleColor = isLight ? palette.textPrimary : '#FFFFFF'
+  const subTitleColor = isLight ? palette.textSecondary : 'rgba(255, 255, 255, 0.75)'
+  const axisTickColor = isLight ? palette.textSecondary : 'rgba(255, 255, 255, 0.7)'
 
   const statCards = [
     { title: 'Usuarios', value: stats.users ?? 0, icon: <PeopleIcon fontSize="medium" />, color: '#63CAAC' },
@@ -37,7 +43,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="70vh">
-        <CircularProgress sx={{ color: ACCENT }} size={50} />
+        <CircularProgress sx={{ color: palette.accent }} size={50} />
       </Box>
     )
   }
@@ -51,15 +57,15 @@ export default function DashboardPage() {
           variant="h4" 
           fontWeight={800} 
           sx={{ 
-            color: '#FFFFFF', 
+            color: mainTitleColor, 
             letterSpacing: '-0.02em', 
-            textShadow: '0 2px 10px rgba(0,0,0,0.5)',
+            textShadow: isLight ? 'none' : '0 2px 10px rgba(0,0,0,0.5)',
             mb: 0.5 
           }}
         >
           Dashboard
         </Typography>
-        <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.75)', mb: 4, fontWeight: 400 }}>
+        <Typography variant="body1" sx={{ color: subTitleColor, mb: 4, fontWeight: 400 }}>
           Resumen general y métricas clave del sistema
         </Typography>
       </motion.div>
@@ -83,11 +89,11 @@ export default function DashboardPage() {
           >
             <Card
               sx={{
-                background: BG_CARD,
+                background: cardBg,
                 backdropFilter: 'blur(16px)',
-                border: BORDER,
+                border: cardBorder,
                 borderRadius: 3,
-                boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+                boxShadow: isLight ? palette.paperShadow : '0 4px 20px rgba(0,0,0,0.2)',
                 transition: 'all 0.3s ease',
                 '&:hover': {
                   border: `1px solid ${card.color}`,
@@ -97,10 +103,10 @@ export default function DashboardPage() {
             >
               <CardContent sx={{ p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box>
-                  <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', fontWeight: 600, mb: 0.5 }}>
+                  <Typography variant="body2" sx={{ color: subTitleColor, fontWeight: 600, mb: 0.5 }}>
                     {card.title}
                   </Typography>
-                  <Typography variant="h4" fontWeight={800} sx={{ color: '#FFFFFF' }}>
+                  <Typography variant="h4" fontWeight={800} sx={{ color: mainTitleColor }}>
                     {card.value}
                   </Typography>
                 </Box>
@@ -135,36 +141,36 @@ export default function DashboardPage() {
         }}
       >
         {/* Gráfico 1: Barras */}
-        <Card sx={{ background: BG_CARD, backdropFilter: 'blur(16px)', border: BORDER, borderRadius: 3, p: 3 }}>
-          <Typography variant="h6" fontWeight={700} sx={{ color: '#FFFFFF', mb: 3 }}>
+        <Card sx={{ background: cardBg, backdropFilter: 'blur(16px)', border: cardBorder, borderRadius: 3, p: 3, boxShadow: isLight ? palette.paperShadow : 'none' }}>
+          <Typography variant="h6" fontWeight={700} sx={{ color: mainTitleColor, mb: 3 }}>
             Productos por Categoría
           </Typography>
           <Box sx={{ width: '100%', height: 300 }}>
             {productsByCategory.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={productsByCategory}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={isLight ? palette.paperBorder : 'rgba(255,255,255,0.08)'} vertical={false} />
+                  <XAxis dataKey="name" tick={{ fill: axisTickColor, fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: axisTickColor, fontSize: 12 }} axisLine={false} tickLine={false} />
                   <Tooltip
-                    contentStyle={{ background: '#121222', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8 }}
-                    labelStyle={{ color: '#FFF', fontWeight: 'bold' }}
-                    itemStyle={{ color: ACCENT }}
+                    contentStyle={{ background: isLight ? palette.paperBg : '#121222', border: `1px solid ${isLight ? palette.paperBorder : 'rgba(255,255,255,0.2)'}`, borderRadius: 8 }}
+                    labelStyle={{ color: mainTitleColor, fontWeight: 'bold' }}
+                    itemStyle={{ color: palette.accent }}
                   />
-                  <Bar dataKey="value" fill={ACCENT} radius={[6, 6, 0, 0]} barSize={32} />
+                  <Bar dataKey="value" fill={palette.accent} radius={[6, 6, 0, 0]} barSize={32} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
               <Box display="flex" justifyContent="center" alignItems="center" height="100%">
-                <Typography sx={{ color: 'rgba(255,255,255,0.5)' }}>Sin datos de categorías</Typography>
+                <Typography sx={{ color: subTitleColor }}>Sin datos de categorías</Typography>
               </Box>
             )}
           </Box>
         </Card>
 
         {/* Gráfico 2: Torta */}
-        <Card sx={{ background: BG_CARD, backdropFilter: 'blur(16px)', border: BORDER, borderRadius: 3, p: 3 }}>
-          <Typography variant="h6" fontWeight={700} sx={{ color: '#FFFFFF', mb: 3 }}>
+        <Card sx={{ background: cardBg, backdropFilter: 'blur(16px)', border: cardBorder, borderRadius: 3, p: 3, boxShadow: isLight ? palette.paperShadow : 'none' }}>
+          <Typography variant="h6" fontWeight={700} sx={{ color: mainTitleColor, mb: 3 }}>
             Órdenes por Estado
           </Typography>
           <Box sx={{ width: '100%', height: 300 }}>
@@ -179,19 +185,19 @@ export default function DashboardPage() {
                     dataKey="value"
                   >
                     {ordersByStatus.map((entry, index) => (
-                      <Cell key={index} fill={entry.color || ACCENT} stroke="transparent" />
+                      <Cell key={index} fill={entry.color || palette.accent} stroke="transparent" />
                     ))}
                   </Pie>
                   <Tooltip
-                    contentStyle={{ background: '#121222', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8 }}
-                    itemStyle={{ color: '#FFF' }}
+                    contentStyle={{ background: isLight ? palette.paperBg : '#121222', border: `1px solid ${isLight ? palette.paperBorder : 'rgba(255,255,255,0.2)'}`, borderRadius: 8 }}
+                    itemStyle={{ color: mainTitleColor }}
                   />
-                  <Legend formatter={(value) => <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px' }}>{value}</span>} />
+                  <Legend formatter={(value) => <span style={{ color: subTitleColor, fontSize: '13px' }}>{value}</span>} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
               <Box display="flex" justifyContent="center" alignItems="center" height="100%">
-                <Typography sx={{ color: 'rgba(255,255,255,0.5)' }}>Sin datos de órdenes</Typography>
+                <Typography sx={{ color: subTitleColor }}>Sin datos de órdenes</Typography>
               </Box>
             )}
           </Box>
@@ -199,12 +205,12 @@ export default function DashboardPage() {
       </Box>
 
       {/* --- TABLA DE ACTIVIDAD RECIENTE --- */}
-      <Card sx={{ background: BG_CARD, backdropFilter: 'blur(16px)', border: BORDER, borderRadius: 3, p: 3 }}>
-        <Typography variant="h6" fontWeight={700} sx={{ color: '#FFFFFF', mb: 3 }}>
+      <Card sx={{ background: cardBg, backdropFilter: 'blur(16px)', border: cardBorder, borderRadius: 3, p: 3, boxShadow: isLight ? palette.paperShadow : 'none' }}>
+        <Typography variant="h6" fontWeight={700} sx={{ color: mainTitleColor, mb: 3 }}>
           Órdenes Recientes
         </Typography>
         {recentOrders.length === 0 ? (
-          <Typography color="rgba(255,255,255,0.5)" textAlign="center" py={4}>
+          <Typography color={subTitleColor} textAlign="center" py={4}>
             No hay órdenes registradas aún
           </Typography>
         ) : (
@@ -213,7 +219,7 @@ export default function DashboardPage() {
               <TableHead>
                 <TableRow>
                   {['ID Órden', 'Cliente', 'Total', 'Estado', 'Fecha'].map((h) => (
-                    <TableCell key={h} sx={{ color: 'rgba(255,255,255,0.6)', borderColor: 'rgba(255,255,255,0.1)', fontWeight: 'bold' }}>
+                    <TableCell key={h} sx={{ color: subTitleColor, borderColor: isLight ? palette.paperBorder : 'rgba(255,255,255,0.1)', fontWeight: 'bold' }}>
                       {h}
                     </TableCell>
                   ))}
@@ -221,17 +227,17 @@ export default function DashboardPage() {
               </TableHead>
               <TableBody>
                 {recentOrders.map((order) => (
-                  <TableRow key={order.id} sx={{ '&:hover': { bgcolor: 'rgba(255,255,255,0.04)' } }}>
-                    <TableCell sx={{ color: 'rgba(255,255,255,0.7)', borderColor: 'rgba(255,255,255,0.05)' }}>
+                  <TableRow key={order.id} sx={{ '&:hover': { bgcolor: isLight ? palette.inputBg : 'rgba(255,255,255,0.04)' } }}>
+                    <TableCell sx={{ color: subTitleColor, borderColor: isLight ? palette.paperBorder : 'rgba(255,255,255,0.05)' }}>
                       #{order.id?.slice(0, 8)}
                     </TableCell>
-                    <TableCell sx={{ color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.05)', fontWeight: 500 }}>
+                    <TableCell sx={{ color: mainTitleColor, borderColor: isLight ? palette.paperBorder : 'rgba(255,255,255,0.05)', fontWeight: 500 }}>
                       {order.user?.firstName || order.userId?.slice(0, 8) || 'Cliente'}
                     </TableCell>
-                    <TableCell sx={{ color: ACCENT, borderColor: 'rgba(255,255,255,0.05)', fontWeight: 'bold' }}>
+                    <TableCell sx={{ color: palette.accent, borderColor: isLight ? palette.paperBorder : 'rgba(255,255,255,0.05)', fontWeight: 'bold' }}>
                       ${Number(order.total || 0).toFixed(2)}
                     </TableCell>
-                    <TableCell sx={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+                    <TableCell sx={{ borderColor: isLight ? palette.paperBorder : 'rgba(255,255,255,0.05)' }}>
                       <Chip
                         label={statusColor[order.status]?.label || order.status}
                         color={statusColor[order.status]?.color || 'default'}
@@ -239,7 +245,7 @@ export default function DashboardPage() {
                         sx={{ fontWeight: 600 }}
                       />
                     </TableCell>
-                    <TableCell sx={{ color: 'rgba(255,255,255,0.6)', borderColor: 'rgba(255,255,255,0.05)' }}>
+                    <TableCell sx={{ color: subTitleColor, borderColor: isLight ? palette.paperBorder : 'rgba(255,255,255,0.05)' }}>
                       {order.createdAt ? new Date(order.createdAt).toLocaleDateString('es-EC') : '-'}
                     </TableCell>
                   </TableRow>

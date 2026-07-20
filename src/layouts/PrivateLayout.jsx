@@ -23,6 +23,7 @@ import { useThemeMode } from '../theme/ThemeModeContext'
 
 const ACCENT = '#63CAAC'
 const DRAWER_WIDTH = 240
+const BG_DARK = 'linear-gradient(135deg, #20232a, #1a1a1a, #20232a)'
 
 const adminMenuItems = [
   { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
@@ -55,10 +56,17 @@ export default function PrivateLayout() {
   const isAdmin = user?.role === 'admin'
   const menuItems = isAdmin ? adminMenuItems : clientMenuItems
 
+  // Variables dinámicas según el modo
+  const isLight = mode === 'light'
+  const textColor = isLight ? '#1a1a1a' : '#ffffff'
+  const textMutedColor = isLight ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)'
+  const dividerColor = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.07)'
+  const hoverBg = isLight ? 'rgba(99,202,172,0.15)' : 'rgba(99,202,172,0.1)'
+
   const drawer = (
     <Box sx={{
       height: '100%',
-      background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)',
+      background: isLight ? '#ffffff' : BG_DARK,
       display: 'flex',
       flexDirection: 'column',
     }}>
@@ -67,12 +75,12 @@ export default function PrivateLayout() {
         <Avatar sx={{ bgcolor: ACCENT, width: 36, height: 36 }}>
           <ComputerIcon fontSize="small" sx={{ color: '#20232a' }} />
         </Avatar>
-        <Typography variant="h6" fontWeight="bold" color="white">
+        <Typography variant="h6" fontWeight="bold" color={textColor}>
           PC Store
         </Typography>
       </Box>
 
-      <Divider sx={{ borderColor: 'rgba(255,255,255,0.07)' }} />
+      <Divider sx={{ borderColor: dividerColor }} />
 
       {/* Menu Items */}
       <List sx={{ flexGrow: 1, px: 1, pt: 2 }}>
@@ -85,17 +93,17 @@ export default function PrivateLayout() {
                   onClick={() => { navigate(item.path); setMobileOpen(false) }}
                   sx={{
                     borderRadius: 3,
-                    color: isActive ? '#20232a' : 'rgba(255,255,255,0.6)',
+                    color: isActive ? '#20232a' : textMutedColor,
                     bgcolor: isActive ? ACCENT : 'transparent',
                     '&:hover': {
-                      bgcolor: isActive ? ACCENT : 'rgba(99,202,172,0.1)',
+                      bgcolor: isActive ? ACCENT : hoverBg,
                       color: isActive ? '#20232a' : ACCENT,
                     },
                     transition: 'all 0.2s',
                   }}
                 >
                   <ListItemIcon sx={{
-                    color: isActive ? '#20232a' : 'rgba(255,255,255,0.6)',
+                    color: isActive ? '#20232a' : textMutedColor,
                     minWidth: 40,
                   }}>
                     {item.icon}
@@ -111,7 +119,7 @@ export default function PrivateLayout() {
         })}
       </List>
 
-      <Divider sx={{ borderColor: 'rgba(255,255,255,0.07)' }} />
+      <Divider sx={{ borderColor: dividerColor }} />
 
       {/* User + Logout + Theme Toggle */}
       <Box sx={{ p: 2 }}>
@@ -119,19 +127,19 @@ export default function PrivateLayout() {
           onClick={() => navigate('/perfil')}
           sx={{
             borderRadius: 3,
-            color: 'rgba(255,255,255,0.6)',
+            color: textMutedColor,
             mb: 1,
-            '&:hover': { bgcolor: 'rgba(255,255,255,0.05)', color: 'white' }
+            '&:hover': { bgcolor: isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.05)', color: textColor }
           }}
         >
-          <ListItemIcon sx={{ color: 'rgba(255,255,255,0.6)', minWidth: 40 }}>
+          <ListItemIcon sx={{ color: textMutedColor, minWidth: 40 }}>
             <PersonIcon />
           </ListItemIcon>
           <ListItemText
             primary={user?.firstName || 'Perfil'}
             secondary={isAdmin ? 'Administrador' : 'Cliente'}
-            primaryTypographyProps={{ color: 'white', fontSize: 14 }}
-            secondaryTypographyProps={{ color: ACCENT, fontSize: 12 }}
+            primaryTypographyProps={{ color: textColor, fontSize: 14 }}
+            secondaryTypographyProps={{ color: ACCENT, fontSize: 12, fontWeight: 'bold' }}
           />
         </ListItemButton>
 
@@ -139,7 +147,7 @@ export default function PrivateLayout() {
           onClick={logout}
           sx={{
             borderRadius: 3,
-            color: 'rgba(239,68,68,0.7)',
+            color: isLight ? '#ef4444' : 'rgba(239,68,68,0.7)',
             '&:hover': { bgcolor: 'rgba(239,68,68,0.1)', color: '#f87171' }
           }}
         >
@@ -153,9 +161,9 @@ export default function PrivateLayout() {
           onClick={toggleMode}
           sx={{
             borderRadius: 3,
-            color: 'rgba(255,255,255,0.6)',
+            color: textMutedColor,
             mt: 1,
-            '&:hover': { bgcolor: 'rgba(99,202,172,0.1)', color: ACCENT }
+            '&:hover': { bgcolor: hoverBg, color: ACCENT }
           }}
         >
           <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
@@ -175,15 +183,15 @@ export default function PrivateLayout() {
       {/* AppBar mobile */}
       <AppBar position="fixed" elevation={0} sx={{
         display: { sm: 'none' },
-        background: 'rgba(26,26,46,0.95)',
+        background: isLight ? 'rgba(255,255,255,0.95)' : 'rgba(32,35,42,0.95)',
         backdropFilter: 'blur(10px)',
-        borderBottom: '1px solid rgba(255,255,255,0.07)',
+        borderBottom: `1px solid ${dividerColor}`,
       }}>
         <Toolbar>
-          <IconButton color="inherit" onClick={() => setMobileOpen(true)} sx={{ mr: 2 }}>
+          <IconButton color="inherit" onClick={() => setMobileOpen(true)} sx={{ mr: 2, color: textColor }}>
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" fontWeight="bold" color="white">PC Store</Typography>
+          <Typography variant="h6" fontWeight="bold" color={textColor}>PC Store</Typography>
         </Toolbar>
       </AppBar>
 
@@ -205,7 +213,12 @@ export default function PrivateLayout() {
         variant="permanent"
         sx={{
           display: { xs: 'none', sm: 'block' },
-          '& .MuiDrawer-paper': { width: DRAWER_WIDTH, border: 'none', boxSizing: 'border-box' },
+          '& .MuiDrawer-paper': { 
+            width: DRAWER_WIDTH, 
+            border: 'none', 
+            borderRight: `1px solid ${dividerColor}`, // Pequeña línea divisoria
+            boxSizing: 'border-box' 
+          },
         }}
         open
       >
