@@ -12,8 +12,9 @@ export function useAuth() {
     try {
       const res = await api.post('/auth/login', { email, password })
       localStorage.setItem('token', res.data.access_token)
+      localStorage.setItem('user', JSON.stringify(res.data.user))
       toast.success('Bienvenido a PC Store')
-      navigate('/products')
+      navigate('/dashboard')
     } catch {
       toast.error('Credenciales incorrectas')
     } finally {
@@ -26,7 +27,7 @@ export function useAuth() {
     try {
       await api.post('/auth/register', data)
       toast.success('Cuenta creada, inicia sesión')
-      navigate('/')
+      navigate('/login')
     } catch (err) {
       const msg = err.response?.data?.message || 'Error al registrarse'
       toast.error(Array.isArray(msg) ? msg[0] : msg)
@@ -37,6 +38,7 @@ export function useAuth() {
 
   const logout = () => {
     localStorage.removeItem('token')
+    localStorage.removeItem('user')
     toast.success('Sesión cerrada')
     navigate('/')
   }
