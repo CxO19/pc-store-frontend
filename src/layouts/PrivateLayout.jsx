@@ -41,7 +41,13 @@ export default function PrivateLayout() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  const user = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || '{}')
+    } catch {
+      return {}
+    }
+  })()
   const isAdmin = user?.role === 'admin'
   const menuItems = isAdmin ? adminMenuItems : clientMenuItems
 
