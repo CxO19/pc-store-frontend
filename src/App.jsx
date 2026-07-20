@@ -6,6 +6,8 @@ import RegisterPage from './pages/RegisterPage'
 import ProductsPage from './pages/ProductsPage'
 import PrivateLayout from './layouts/PrivateLayout'
 import DashboardPage from './pages/private/DashboardPage'
+import AdminProductsPage from './pages/private/admin/ProductsPage'
+import AdminBrandsPage from './pages/private/admin/BrandsPage'
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token')
@@ -42,9 +44,9 @@ export default function App() {
           }
         >
           <Route path="usuarios" element={<DashboardPage />} />
-          <Route path="productos" element={<DashboardPage />} />
+          <Route path="productos" element={<AdminProductsPage />} />
           <Route path="categorias" element={<DashboardPage />} />
-          <Route path="marcas" element={<DashboardPage />} />
+          <Route path="marcas" element={<AdminBrandsPage />} />
           <Route path="ordenes" element={<DashboardPage />} />
         </Route>
       </Routes>
