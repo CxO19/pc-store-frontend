@@ -6,6 +6,7 @@ import RegisterPage from './pages/RegisterPage'
 import ProductsPage from './pages/ProductsPage'
 import PrivateLayout from './layouts/PrivateLayout'
 import DashboardPage from './pages/private/DashboardPage'
+import UsersPage from './pages/private/admin/UsersPage'
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token')
@@ -41,7 +42,7 @@ export default function App() {
             </PrivateRoute>
           }
         >
-          <Route path="usuarios" element={<DashboardPage />} />
+          <Route path="usuarios" element={<UsersPage />} />
           <Route path="productos" element={<DashboardPage />} />
           <Route path="categorias" element={<DashboardPage />} />
           <Route path="marcas" element={<DashboardPage />} />
