@@ -45,8 +45,6 @@ export default function App() {
           }
         >
           <Route path="usuarios" element={<UsersPage />} />
-          <Route path="productos" element={<DashboardPage />} />
-          <Route path="usuarios" element={<DashboardPage />} />
           <Route path="productos" element={<AdminProductsPage />} />
           <Route path="categorias" element={<DashboardPage />} />
           <Route path="marcas" element={<AdminBrandsPage />} />
