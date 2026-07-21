@@ -26,7 +26,7 @@ const DRAWER_WIDTH = 240
 const BG_DARK = 'linear-gradient(135deg, #20232a, #1a1a1a, #20232a)'
 
 const adminMenuItems = [
-  { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
+  { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin' },
   { text: 'Usuarios', icon: <PeopleIcon />, path: '/admin/usuarios' },
   { text: 'Productos', icon: <InventoryIcon />, path: '/admin/productos' },
   { text: 'Categorías', icon: <CategoryIcon />, path: '/admin/categorias' },
@@ -36,7 +36,8 @@ const adminMenuItems = [
 
 const clientMenuItems = [
   { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
-  { text: 'Mis Órdenes', icon: <ShoppingCartIcon />, path: '/admin/ordenes' },
+  { text: 'Productos', icon: <InventoryIcon />, path: '/dashboard/productos' },
+  { text: 'Mis Órdenes', icon: <ShoppingCartIcon />, path: '/dashboard/ordenes' },
 ]
 
 export default function PrivateLayout() {
@@ -124,7 +125,7 @@ export default function PrivateLayout() {
       {/* User + Logout + Theme Toggle */}
       <Box sx={{ p: 2 }}>
         <ListItemButton
-          onClick={() => navigate('/perfil')}
+          onClick={() => navigate(isAdmin ? '/admin/perfil' : '/dashboard/perfil')}
           sx={{
             borderRadius: 3,
             color: textMutedColor,
@@ -216,7 +217,7 @@ export default function PrivateLayout() {
           '& .MuiDrawer-paper': { 
             width: DRAWER_WIDTH, 
             border: 'none', 
-            borderRight: `1px solid ${dividerColor}`, // Pequeña línea divisoria
+            borderRight: `1px solid ${dividerColor}`,
             boxSizing: 'border-box' 
           },
         }}

@@ -4,16 +4,33 @@ import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import ProductsPage from './pages/ProductsPage'
+import ProductDetailPage from './pages/public/ProductDetailPage'
 import PrivateLayout from './layouts/PrivateLayout'
 import DashboardPage from './pages/private/DashboardPage'
 import UsersPage from './pages/private/admin/UsersPage'
 import AdminProductsPage from './pages/private/admin/ProductsPage'
+import CategoriesPage from './pages/private/admin/CategoriesPage'
 import AdminBrandsPage from './pages/private/admin/BrandsPage'
+import OrdersAdminPage from './pages/private/admin/OrdersAdminPage'
+import ClientOrdersPage from './pages/private/client/ClientOrdersPage'
+import ProfilePage from './pages/private/ProfilePage'
 
-// Componente para proteger rutas privadas
-function PrivateRoute({ children }) {
+function PrivateRoute({ children, requiredRole }) {
   const token = localStorage.getItem('token')
-  return token ? children : <Navigate to="/login" replace />
+  if (!token) return <Navigate to="/login" replace />
+
+  if (requiredRole) {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      if (user.role !== requiredRole) {
+        return <Navigate to="/dashboard" replace />
+      }
+    } catch {
+      return <Navigate to="/login" replace />
+    }
+  }
+
+  return children
 }
 
 export default function App() {
@@ -21,13 +38,14 @@ export default function App() {
     <BrowserRouter>
       <Toaster position="top-right" />
       <Routes>
-        {/* Rutas Públicas */}
+        {/* --- RUTAS PÚBLICAS (Accesibles sin iniciar sesión) --- */}
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/productos" element={<ProductsPage />} />
+        <Route path="/productos/:id" element={<ProductDetailPage />} />
 
-        {/* Ruta Privada Base (Dashboard) */}
+        {/* --- PANEL PRIVADO GENERAL / CLIENTE --- */}
         <Route
           path="/dashboard"
           element={
@@ -37,13 +55,16 @@ export default function App() {
           }
         >
           <Route index element={<DashboardPage />} />
+          <Route path="productos" element={<ProductsPage />} />
+          <Route path="ordenes" element={<ClientOrdersPage />} />
+          <Route path="perfil" element={<ProfilePage />} />
         </Route>
 
-        {/* Rutas Privadas de Administración */}
+        {/* --- PANEL DE ADMINISTRACIÓN --- */}
         <Route
-          path="/admin/*"
+          path="/admin"
           element={
-            <PrivateRoute>
+            <PrivateRoute requiredRole="admin">
               <PrivateLayout />
             </PrivateRoute>
           }
@@ -51,12 +72,12 @@ export default function App() {
           <Route index element={<DashboardPage />} />
           <Route path="usuarios" element={<UsersPage />} />
           <Route path="productos" element={<AdminProductsPage />} />
-          <Route path="categorias" element={<DashboardPage />} />
+          <Route path="categorias" element={<CategoriesPage />} />
           <Route path="marcas" element={<AdminBrandsPage />} />
-          <Route path="ordenes" element={<DashboardPage />} />
+          <Route path="ordenes" element={<OrdersAdminPage />} />
+          <Route path="perfil" element={<ProfilePage />} />
         </Route>
 
-        {/* Fallback para rutas no encontradas */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

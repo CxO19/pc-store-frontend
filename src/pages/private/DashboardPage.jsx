@@ -74,7 +74,7 @@ export default function DashboardPage() {
       <Box 
         sx={{ 
           display: 'grid', 
-          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, 
+          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
           gap: 3, 
           mb: 4 
         }}
@@ -141,7 +141,10 @@ export default function DashboardPage() {
         }}
       >
         {/* Gráfico 1: Barras */}
-        <Card sx={{ background: cardBg, backdropFilter: 'blur(16px)', border: cardBorder, borderRadius: 3, p: 3, boxShadow: isLight ? palette.paperShadow : 'none' }}>
+        <Card sx={{ background: cardBg, backdropFilter: 'blur(16px)', border: cardBorder, borderRadius: 3, p: 3, boxShadow: isLight 
+                ? '0 10px 30px rgba(0, 0, 0, 0.08)' 
+                : '0 10px 30px -10px rgba(99, 202, 172, 0.15)',
+              backgroundImage: 'none', }}>
           <Typography variant="h6" fontWeight={700} sx={{ color: mainTitleColor, mb: 3 }}>
             Productos por Categoría
           </Typography>
@@ -169,7 +172,10 @@ export default function DashboardPage() {
         </Card>
 
         {/* Gráfico 2: Torta */}
-        <Card sx={{ background: cardBg, backdropFilter: 'blur(16px)', border: cardBorder, borderRadius: 3, p: 3, boxShadow: isLight ? palette.paperShadow : 'none' }}>
+        <Card sx={{ background: cardBg, backdropFilter: 'blur(16px)', border: cardBorder, borderRadius: 3, p: 3, boxShadow: isLight 
+                ? '0 10px 30px rgba(0, 0, 0, 0.08)' 
+                : '0 10px 30px -10px rgba(99, 202, 172, 0.15)',
+              backgroundImage: 'none', }}>
           <Typography variant="h6" fontWeight={700} sx={{ color: mainTitleColor, mb: 3 }}>
             Órdenes por Estado
           </Typography>
@@ -205,7 +211,10 @@ export default function DashboardPage() {
       </Box>
 
       {/* --- TABLA DE ACTIVIDAD RECIENTE --- */}
-      <Card sx={{ background: cardBg, backdropFilter: 'blur(16px)', border: cardBorder, borderRadius: 3, p: 3, boxShadow: isLight ? palette.paperShadow : 'none' }}>
+      <Card sx={{ background: cardBg, backdropFilter: 'blur(16px)', border: cardBorder, borderRadius: 3, p: 3, boxShadow: isLight 
+                ? '0 10px 30px rgba(0, 0, 0, 0.08)' 
+                : '0 10px 30px -10px rgba(99, 202, 172, 0.15)',
+              backgroundImage: 'none', }}>
         <Typography variant="h6" fontWeight={700} sx={{ color: mainTitleColor, mb: 3 }}>
           Órdenes Recientes
         </Typography>

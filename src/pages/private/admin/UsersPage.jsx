@@ -15,6 +15,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import api from '../../../api/axios'
+import { useThemeMode } from '../../../theme/ThemeModeContext'
 
 const ACCENT = '#63CAAC'
 const ACCENT_GLOW = 'rgba(99, 202, 172, 0.4)'
@@ -33,6 +34,18 @@ const initialForm = {
 }
 
 export default function UsersPage() {
+  const { mode } = useThemeMode()
+  const isLight = mode === 'light'
+
+  // Colores seguros y explícitos para evitar que el texto desaparezca en oscuro
+  const textColor = isLight ? '#1a1a1a' : '#ffffff'
+  const textMuted = isLight ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.7)'
+  const tableHeadColor = isLight ? '#111827' : '#ffffff'
+  const paperBg = isLight ? '#ffffff' : 'rgba(255,255,255,0.03)'
+  const borderColor = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.1)'
+  const inputBg = isLight ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.05)'
+  const dialogBg = isLight ? '#ffffff' : '#1e2130'
+
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(0)
@@ -133,8 +146,10 @@ export default function UsersPage() {
     const errors = {}
     if (!form.email.trim()) errors.email = 'El email es requerido'
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errors.email = 'Email inválido'
+    
     if (!isEdit && !form.password.trim()) errors.password = 'La contraseña es requerida'
     else if (form.password && form.password.length < 6) errors.password = 'Mínimo 6 caracteres'
+    
     if (!form.firstName.trim()) errors.firstName = 'El nombre es requerido'
     if (!form.lastName.trim()) errors.lastName = 'El apellido es requerido'
     return errors
@@ -222,8 +237,8 @@ export default function UsersPage() {
   }
 
   const roleColors = {
-    admin: { bg: 'rgba(99,202,172,0.12)', color: ACCENT, border: 'rgba(99,202,172,0.3)' },
-    client: { bg: 'rgba(96,165,250,0.12)', color: '#93c5fd', border: 'rgba(96,165,250,0.3)' },
+    admin: { bg: 'rgba(99,202,172,0.15)', color: isLight ? '#0f766e' : ACCENT, border: 'rgba(99,202,172,0.3)' },
+    client: { bg: 'rgba(96,165,250,0.15)', color: isLight ? '#1d4ed8' : '#93c5fd', border: 'rgba(96,165,250,0.3)' },
   }
 
   const roleLabels = {
@@ -231,20 +246,47 @@ export default function UsersPage() {
     client: 'Cliente',
   }
 
+  const fieldStyles = {
+    '& .MuiOutlinedInput-root': {
+      color: textColor,
+      borderRadius: 3,
+      bgcolor: inputBg,
+      '& fieldset': { borderColor: isLight ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.12)' },
+      '&:hover fieldset': { borderColor: isLight ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.25)' },
+      '&.Mui-focused fieldset': { borderColor: ACCENT },
+      '&.Mui-error fieldset': { borderColor: '#ef4444' },
+    },
+    '& .MuiInputLabel-root': { color: textMuted },
+    '& .MuiInputLabel-root.Mui-focused': { color: ACCENT },
+    '& .MuiFormHelperText-root': { color: '#ef4444' },
+  }
+
   return (
-    <Box>
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
-        <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2} mb={3}>
+    <Box sx={{ width: '100%', maxWidth: '100%', px: { xs: 2, sm: 4, md: 6 }, py: 4, boxSizing: 'border-box' }}>
+      
+      {/* Header section with explicit forced text color */}
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' }, 
+            justifyContent: 'space-between', 
+            alignItems: { xs: 'flex-start', sm: 'center' }, 
+            gap: 3, 
+            mb: 4,
+            width: '100%' 
+          }}
+        >
           <Box>
-            <Typography variant="h4" fontWeight="bold" color="white" mb={0.5}>
+            <Typography 
+              variant="h4" 
+              fontWeight="800" 
+              sx={{ color: isLight ? '#1a1a1a' : '#ffffff', mb: 0.5, letterSpacing: '-0.5px' }}
+            >
               Usuarios
             </Typography>
-            <Typography variant="body2" color="rgba(255,255,255,0.4)">
-              {total} usuarios registrados
+            <Typography variant="body2" sx={{ color: textMuted }}>
+              {total} usuarios registrados en el sistema
             </Typography>
           </Box>
           <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
@@ -257,10 +299,12 @@ export default function UsersPage() {
                 color: '#20232a',
                 fontWeight: 'bold',
                 borderRadius: 3,
-                px: 3,
+                px: 3.5,
+                py: 1.4,
+                boxShadow: `0 4px 14px ${ACCENT_GLOW}`,
                 '&:hover': {
                   bgcolor: ACCENT,
-                  boxShadow: `0 0 20px ${ACCENT_GLOW}`,
+                  boxShadow: `0 6px 20px ${ACCENT_GLOW}`,
                 },
               }}
             >
@@ -271,76 +315,72 @@ export default function UsersPage() {
       </motion.div>
 
       {/* Search bar */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
-      >
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}>
         <TextField
           fullWidth
           placeholder="Buscar por nombre, email..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           variant="outlined"
-          size="small"
+          size="medium"
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon sx={{ color: 'rgba(255,255,255,0.4)' }} />
+                <SearchIcon sx={{ color: textMuted, ml: 1 }} />
               </InputAdornment>
             ),
             endAdornment: search && (
               <InputAdornment position="end">
-                <IconButton size="small" onClick={() => setSearch('')} sx={{ color: 'rgba(255,255,255,0.4)' }}>
+                <IconButton size="small" onClick={() => setSearch('')} sx={{ color: textMuted, mr: 1 }}>
                   <CloseIcon fontSize="small" />
                 </IconButton>
               </InputAdornment>
             ),
           }}
           sx={{
-            mb: 3,
+            mb: 4,
             '& .MuiOutlinedInput-root': {
-              color: 'white',
-              borderRadius: 3,
-              bgcolor: 'rgba(255,255,255,0.04)',
-              '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
-              '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+              color: textColor,
+              borderRadius: 3.5,
+              bgcolor: inputBg,
+              '& fieldset': { borderColor },
+              '&:hover fieldset': { borderColor: isLight ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)' },
               '&.Mui-focused fieldset': { borderColor: ACCENT },
             },
-            '& input::placeholder': { color: 'rgba(255,255,255,0.3)', opacity: 1 },
+            '& input::placeholder': { color: textMuted, opacity: 1 },
           }}
         />
       </motion.div>
 
-      {/* Table */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.2 }}
-      >
+      {/* Table container */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }}>
         <TableContainer
           component={Paper}
           sx={{
             borderRadius: 4,
-            bgcolor: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.07)',
+            bgcolor: paperBg,
+            border: `1px solid ${borderColor}`,
             backdropFilter: 'blur(10px)',
-            mb: 2,
+            mb: 3,
+            boxShadow: isLight ? '0 10px 30px rgba(0,0,0,0.04)' : '0 10px 30px rgba(0,0,0,0.2)',
+            overflowX: 'auto',
+            width: '100%',
           }}
         >
-          <Table>
+          <Table sx={{ minWidth: 900, width: '100%' }}>
             <TableHead>
-              <TableRow sx={{ '& th': { borderBottom: '1px solid rgba(255,255,255,0.07)' } }}>
-                <TableCell sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 'bold', fontSize: 13 }}>
+              <TableRow sx={{ '& th': { borderBottom: `2px solid ${borderColor}`, py: 2.5 } }}>
+                <TableCell align="left" sx={{ color: tableHeadColor, fontWeight: '800', fontSize: '0.9rem', pl: 4 }}>
                   Usuario
                 </TableCell>
-                <TableCell sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 'bold', fontSize: 13 }}>
+                <TableCell align="left" sx={{ color: tableHeadColor, fontWeight: '800', fontSize: '0.9rem', px: 3 }}>
                   <TableSortLabel
                     active={sortBy === 'email'}
                     direction={sortBy === 'email' ? sortOrder : 'asc'}
                     onClick={() => handleSort('email')}
                     sx={{
-                      color: 'rgba(255,255,255,0.5) !important',
+                      color: `${tableHeadColor} !important`,
+                      fontWeight: '800 !important',
                       '&:hover': { color: `${ACCENT} !important` },
                       '&.Mui-active': { color: `${ACCENT} !important` },
                       '& .MuiTableSortLabel-icon': { color: `${ACCENT} !important` },
@@ -349,13 +389,14 @@ export default function UsersPage() {
                     Email
                   </TableSortLabel>
                 </TableCell>
-                <TableCell sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 'bold', fontSize: 13 }}>
+                <TableCell align="left" sx={{ color: tableHeadColor, fontWeight: '800', fontSize: '0.9rem', px: 3 }}>
                   <TableSortLabel
                     active={sortBy === 'role'}
                     direction={sortBy === 'role' ? sortOrder : 'asc'}
                     onClick={() => handleSort('role')}
                     sx={{
-                      color: 'rgba(255,255,255,0.5) !important',
+                      color: `${tableHeadColor} !important`,
+                      fontWeight: '800 !important',
                       '&:hover': { color: `${ACCENT} !important` },
                       '&.Mui-active': { color: `${ACCENT} !important` },
                       '& .MuiTableSortLabel-icon': { color: `${ACCENT} !important` },
@@ -364,10 +405,10 @@ export default function UsersPage() {
                     Rol
                   </TableSortLabel>
                 </TableCell>
-                <TableCell sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 'bold', fontSize: 13 }}>
+                <TableCell align="left" sx={{ color: tableHeadColor, fontWeight: '800', fontSize: '0.9rem', px: 3 }}>
                   Estado
                 </TableCell>
-                <TableCell sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 'bold', fontSize: 13 }} align="center">
+                <TableCell align="center" sx={{ color: tableHeadColor, fontWeight: '800', fontSize: '0.9rem', pr: 4 }}>
                   Acciones
                 </TableCell>
               </TableRow>
@@ -375,17 +416,15 @@ export default function UsersPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 8, borderBottom: 'none' }}>
-                    <CircularProgress size={40} sx={{ color: ACCENT }} />
-                    <Typography color="rgba(255,255,255,0.4)" mt={2}>Cargando usuarios...</Typography>
+                  <TableCell colSpan={5} align="center" sx={{ py: 10, borderBottom: 'none' }}>
+                    <CircularProgress size={45} sx={{ color: ACCENT }} />
+                    <Typography color={textMuted} mt={2} fontSize={15}>Cargando usuarios...</Typography>
                   </TableCell>
                 </TableRow>
               ) : users.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 8, borderBottom: 'none' }}>
-                    <Typography color="rgba(255,255,255,0.3)" fontSize={15}>
-                      No se encontraron usuarios
-                    </Typography>
+                  <TableCell colSpan={5} align="center" sx={{ py: 10, borderBottom: 'none' }}>
+                    <Typography color={textMuted} fontSize={16}>No se encontraron usuarios registrados</Typography>
                   </TableCell>
                 </TableRow>
               ) : (
@@ -397,63 +436,62 @@ export default function UsersPage() {
                     transition={{ delay: index * 0.03, duration: 0.3 }}
                     style={{ display: 'table-row' }}
                   >
-                    <TableCell sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                      <Box display="flex" alignItems="center" gap={1.5}>
+                    <TableCell align="left" sx={{ borderBottom: `1px solid ${borderColor}`, py: 3, pl: 4 }}>
+                      <Box display="flex" alignItems="center" gap={2.5}>
                         <Avatar sx={{
-                          width: 36, height: 36, fontSize: 14, fontWeight: 'bold',
+                          width: 42, height: 42, fontSize: 15, fontWeight: 'bold',
                           bgcolor: user.isActive === false ? 'rgba(239,68,68,0.15)' : `${ACCENT}20`,
-                          color: user.isActive === false ? '#f87171' : ACCENT,
+                          color: user.isActive === false ? '#f87171' : (isLight ? '#0f766e' : ACCENT),
                         }}>
                           {getInitials(user.firstName, user.lastName)}
                         </Avatar>
-                        <Box>
-                          <Typography color="white" fontWeight="medium" fontSize={14}>
-                            {user.firstName} {user.lastName}
-                          </Typography>
-                        </Box>
+                        <Typography color={textColor} fontWeight="600" fontSize={15}>
+                          {user.firstName} {user.lastName}
+                        </Typography>
                       </Box>
                     </TableCell>
-                    <TableCell sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                      <Typography color="rgba(255,255,255,0.6)" fontSize={14}>
-                        {user.email}
-                      </Typography>
+                    <TableCell align="left" sx={{ borderBottom: `1px solid ${borderColor}`, py: 3, px: 3 }}>
+                      <Typography color={textMuted} fontSize={14.5}>{user.email}</Typography>
                     </TableCell>
-                    <TableCell sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <TableCell align="left" sx={{ borderBottom: `1px solid ${borderColor}`, py: 3, px: 3 }}>
                       <Chip
                         label={roleLabels[user.role] || user.role}
                         size="small"
                         sx={{
-                          bgcolor: roleColors[user.role]?.bg || 'rgba(255,255,255,0.06)',
-                          color: roleColors[user.role]?.color || 'rgba(255,255,255,0.6)',
-                          border: `1px solid ${roleColors[user.role]?.border || 'rgba(255,255,255,0.1)'}`,
+                          bgcolor: roleColors[user.role]?.bg,
+                          color: roleColors[user.role]?.color,
+                          border: `1px solid ${roleColors[user.role]?.border}`,
                           fontWeight: 'bold',
-                          fontSize: 12,
+                          fontSize: 12.5,
+                          px: 1.5,
+                          py: 0.5,
                         }}
                       />
                     </TableCell>
-                    <TableCell sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <TableCell align="left" sx={{ borderBottom: `1px solid ${borderColor}`, py: 3, px: 3 }}>
                       <Chip
                         label={user.isActive === false ? 'Inactivo' : 'Activo'}
                         size="small"
                         sx={{
-                          bgcolor: user.isActive === false
-                            ? 'rgba(239,68,68,0.12)'
-                            : 'rgba(34,197,94,0.12)',
-                          color: user.isActive === false ? '#f87171' : '#4ade80',
-                          border: `1px solid ${user.isActive === false ? '#f87171' : '#4ade80'}`,
+                          bgcolor: user.isActive === false ? 'rgba(239,68,68,0.12)' : 'rgba(34,197,94,0.12)',
+                          color: user.isActive === false ? '#f87171' : '#16a34a',
+                          border: `1px solid ${user.isActive === false ? '#f87171' : '#16a34a'}`,
                           fontWeight: 'bold',
-                          fontSize: 12,
+                          fontSize: 12.5,
+                          px: 1.5,
+                          py: 0.5,
                         }}
                       />
                     </TableCell>
-                    <TableCell sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }} align="center">
-                      <Box display="flex" justifyContent="center" gap={0.5}>
+                    <TableCell align="center" sx={{ borderBottom: `1px solid ${borderColor}`, py: 3, pr: 4 }}>
+                      <Box display="flex" justifyContent="center" gap={1.5}>
                         <Tooltip title="Editar" arrow>
                           <IconButton
                             size="small"
                             onClick={() => handleOpenEdit(user)}
                             sx={{
-                              color: 'rgba(255,255,255,0.4)',
+                              color: textMuted,
+                              p: 1,
                               '&:hover': { color: ACCENT, bgcolor: `${ACCENT}15` },
                             }}
                           >
@@ -465,19 +503,15 @@ export default function UsersPage() {
                             size="small"
                             onClick={() => handleOpenConfirm(user)}
                             sx={{
-                              color: user.isActive === false ? '#4ade80' : 'rgba(239,68,68,0.5)',
+                              color: user.isActive === false ? '#16a34a' : 'rgba(239,68,68,0.7)',
+                              p: 1,
                               '&:hover': {
-                                color: user.isActive === false ? '#4ade80' : '#f87171',
-                                bgcolor: user.isActive === false
-                                  ? 'rgba(34,197,94,0.1)'
-                                  : 'rgba(239,68,68,0.1)',
+                                color: user.isActive === false ? '#16a34a' : '#ef4444',
+                                bgcolor: user.isActive === false ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
                               },
                             }}
                           >
-                            {user.isActive === false
-                              ? <RestoreIcon fontSize="small" />
-                              : <DeleteIcon fontSize="small" />
-                            }
+                            {user.isActive === false ? <RestoreIcon fontSize="small" /> : <DeleteIcon fontSize="small" />}
                           </IconButton>
                         </Tooltip>
                       </Box>
@@ -498,21 +532,23 @@ export default function UsersPage() {
             labelRowsPerPage="Filas por página:"
             labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
             sx={{
-              color: 'rgba(255,255,255,0.5)',
-              borderTop: '1px solid rgba(255,255,255,0.05)',
-              '& .MuiTablePagination-select': { color: 'white' },
-              '& .MuiTablePagination-selectIcon': { color: 'rgba(255,255,255,0.5)' },
+              color: textMuted,
+              borderTop: `1px solid ${borderColor}`,
+              py: 1.5,
+              px: 2,
+              '& .MuiTablePagination-select': { color: textColor },
+              '& .MuiTablePagination-selectIcon': { color: textMuted },
               '& .MuiIconButton-root': {
-                color: 'rgba(255,255,255,0.5)',
+                color: textMuted,
                 '&:hover': { color: ACCENT, bgcolor: `${ACCENT}15` },
-                '&.Mui-disabled': { color: 'rgba(255,255,255,0.15)' },
+                '&.Mui-disabled': { color: isLight ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.15)' },
               },
             }}
           />
         </TableContainer>
       </motion.div>
 
-      {/* Create/Edit Modal */}
+      {/* Dialogs de Crear/Editar/Confirmar */}
       <Dialog
         open={openCreate || openEdit}
         onClose={handleCloseModals}
@@ -521,18 +557,19 @@ export default function UsersPage() {
         PaperProps={{
           sx: {
             borderRadius: 4,
-            bgcolor: '#1e2130',
-            border: '1px solid rgba(255,255,255,0.08)',
+            bgcolor: dialogBg,
+            border: `1px solid ${borderColor}`,
             backgroundImage: 'none',
+            p: 1,
           },
         }}
       >
         <form onSubmit={openCreate ? handleCreate : handleEdit}>
-          <DialogTitle sx={{ color: 'white', fontWeight: 'bold', pb: 0 }}>
+          <DialogTitle sx={{ color: textColor, fontWeight: 'bold', pb: 0, pt: 2, px: 3 }}>
             {openCreate ? 'Nuevo Usuario' : 'Editar Usuario'}
           </DialogTitle>
-          <DialogContent sx={{ pt: 3 }}>
-            <Box display="flex" flexDirection="column" gap={2.5}>
+          <DialogContent sx={{ pt: 3, px: 3 }}>
+            <Box display="flex" flexDirection="column" gap={3}>
               <Box display="flex" gap={2}>
                 <TextField
                   fullWidth
@@ -542,9 +579,7 @@ export default function UsersPage() {
                   onChange={handleFormChange}
                   error={!!formErrors.firstName}
                   helperText={formErrors.firstName}
-                  size="small"
-                  variant="outlined"
-                  InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.4)' } }}
+                  size="medium"
                   sx={fieldStyles}
                 />
                 <TextField
@@ -555,9 +590,7 @@ export default function UsersPage() {
                   onChange={handleFormChange}
                   error={!!formErrors.lastName}
                   helperText={formErrors.lastName}
-                  size="small"
-                  variant="outlined"
-                  InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.4)' } }}
+                  size="medium"
                   sx={fieldStyles}
                 />
               </Box>
@@ -570,9 +603,7 @@ export default function UsersPage() {
                 onChange={handleFormChange}
                 error={!!formErrors.email}
                 helperText={formErrors.email}
-                size="small"
-                variant="outlined"
-                InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.4)' } }}
+                size="medium"
                 sx={fieldStyles}
               />
               <TextField
@@ -584,10 +615,8 @@ export default function UsersPage() {
                 onChange={handleFormChange}
                 error={!!formErrors.password}
                 helperText={formErrors.password}
-                size="small"
-                variant="outlined"
+                size="medium"
                 autoComplete="new-password"
-                InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.4)' } }}
                 sx={fieldStyles}
               />
               <TextField
@@ -597,22 +626,20 @@ export default function UsersPage() {
                 name="role"
                 value={form.role}
                 onChange={handleFormChange}
-                size="small"
-                variant="outlined"
-                InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.4)' } }}
+                size="medium"
                 sx={{
                   ...fieldStyles,
-                  '& .MuiSelect-select': { color: 'white' },
-                  '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.4)' },
+                  '& .MuiSelect-select': { color: textColor },
+                  '& .MuiSvgIcon-root': { color: textMuted },
                 }}
                 SelectProps={{
                   MenuProps: {
                     PaperProps: {
                       sx: {
-                        bgcolor: '#1e2130',
-                        border: '1px solid rgba(255,255,255,0.08)',
+                        bgcolor: dialogBg,
+                        border: `1px solid ${borderColor}`,
                         '& .MuiMenuItem-root': {
-                          color: 'white',
+                          color: textColor,
                           '&:hover': { bgcolor: `${ACCENT}20` },
                           '&.Mui-selected': { bgcolor: `${ACCENT}30`, color: ACCENT },
                         },
@@ -629,13 +656,14 @@ export default function UsersPage() {
               </TextField>
             </Box>
           </DialogContent>
-          <DialogActions sx={{ px: 3, pb: 3 }}>
+          <DialogActions sx={{ px: 3, pb: 3, pt: 2 }}>
             <Button
               onClick={handleCloseModals}
               sx={{
-                color: 'rgba(255,255,255,0.5)',
+                color: textMuted,
                 borderRadius: 3,
-                '&:hover': { bgcolor: 'rgba(255,255,255,0.05)', color: 'white' },
+                px: 2.5,
+                '&:hover': { bgcolor: isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)', color: textColor },
               }}
             >
               Cancelar
@@ -650,6 +678,7 @@ export default function UsersPage() {
                 color: '#20232a',
                 fontWeight: 'bold',
                 borderRadius: 3,
+                px: 3,
                 '&:hover': {
                   bgcolor: ACCENT,
                   boxShadow: `0 0 15px ${ACCENT_GLOW}`,
@@ -662,7 +691,6 @@ export default function UsersPage() {
         </form>
       </Dialog>
 
-      {/* Confirm Dialog */}
       <Dialog
         open={openConfirm}
         onClose={() => setOpenConfirm(false)}
@@ -671,30 +699,32 @@ export default function UsersPage() {
         PaperProps={{
           sx: {
             borderRadius: 4,
-            bgcolor: '#1e2130',
-            border: '1px solid rgba(255,255,255,0.08)',
+            bgcolor: dialogBg,
+            border: `1px solid ${borderColor}`,
             backgroundImage: 'none',
+            p: 1,
           },
         }}
       >
-        <DialogTitle sx={{ color: 'white', fontWeight: 'bold', pb: 0 }}>
+        <DialogTitle sx={{ color: textColor, fontWeight: 'bold', pb: 0, pt: 2, px: 3 }}>
           {selectedUser?.isActive === false ? 'Reactivar Usuario' : 'Desactivar Usuario'}
         </DialogTitle>
-        <DialogContent sx={{ pt: 2 }}>
-          <Typography color="rgba(255,255,255,0.6)" fontSize={14}>
+        <DialogContent sx={{ pt: 2, px: 3 }}>
+          <Typography color={textMuted} fontSize={14}>
             {selectedUser?.isActive === false
               ? `¿Estás seguro de reactivar a ${selectedUser?.firstName} ${selectedUser?.lastName}?`
               : `¿Estás seguro de desactivar a ${selectedUser?.firstName} ${selectedUser?.lastName}? Esta acción no eliminará al usuario permanentemente.`
             }
           </Typography>
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 3 }}>
+        <DialogActions sx={{ px: 3, pb: 3, pt: 2 }}>
           <Button
             onClick={() => setOpenConfirm(false)}
             sx={{
-              color: 'rgba(255,255,255,0.5)',
+              color: textMuted,
               borderRadius: 3,
-              '&:hover': { bgcolor: 'rgba(255,255,255,0.05)', color: 'white' },
+              px: 2.5,
+              '&:hover': { bgcolor: isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)', color: textColor },
             }}
           >
             Cancelar
@@ -704,40 +734,21 @@ export default function UsersPage() {
             onClick={handleToggleStatus}
             disabled={saving}
             sx={{
-              bgcolor: selectedUser?.isActive === false ? '#4ade80' : '#ef4444',
+              bgcolor: selectedUser?.isActive === false ? '#16a34a' : '#ef4444',
               color: 'white',
               fontWeight: 'bold',
               borderRadius: 3,
+              px: 3,
               '&:hover': {
-                bgcolor: selectedUser?.isActive === false ? '#4ade80' : '#ef4444',
+                bgcolor: selectedUser?.isActive === false ? '#16a34a' : '#ef4444',
                 opacity: 0.9,
               },
             }}
           >
-            {saving
-              ? 'Procesando...'
-              : selectedUser?.isActive === false
-                ? 'Reactivar'
-                : 'Desactivar'
-            }
+            {saving ? 'Procesando...' : selectedUser?.isActive === false ? 'Reactivar' : 'Desactivar'}
           </Button>
         </DialogActions>
       </Dialog>
     </Box>
   )
-}
-
-const fieldStyles = {
-  '& .MuiOutlinedInput-root': {
-    color: 'white',
-    borderRadius: 3,
-    '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
-    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.25)' },
-    '&.Mui-focused fieldset': { borderColor: '#63CAAC' },
-    '&.Mui-error fieldset': { borderColor: '#ef4444' },
-  },
-  '& .MuiFormHelperText-root': {
-    color: '#ef4444',
-    '&.Mui-error': { color: '#ef4444' },
-  },
 }

@@ -19,7 +19,6 @@ export default function ProductsPage() {
   const { palette } = useThemeMode()
   const isLight = palette.mode === 'light'
 
-  // Colores seguros y explícitos para evitar que el texto desaparezca en oscuro
   const textColor = isLight ? '#1a1a1a' : '#ffffff'
   const textMuted = isLight ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.7)'
 
@@ -46,6 +45,23 @@ export default function ProductsPage() {
   const [confirmTarget, setConfirmTarget] = useState(null)
   const [deactivating, setDeactivating] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
+
+  // Configuración unificada para los menús desplegables (Selects) para que combinen con la temática
+  const menuPropsConfig = {
+    PaperProps: {
+      sx: {
+        bgcolor: palette.paperBg || (isLight ? '#ffffff' : '#1e2130'),
+        border: `1px solid ${palette.paperBorder || (isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.1)')}`,
+        backgroundImage: 'none',
+        '& .MuiMenuItem-root': {
+          color: textColor,
+          fontSize: '0.9rem',
+          '&:hover': { bgcolor: `${palette.accent || '#63CAAC'}20` },
+          '&.Mui-selected': { bgcolor: `${palette.accent || '#63CAAC'}30`, color: palette.accent || '#63CAAC' },
+        },
+      },
+    },
+  }
 
   useEffect(() => {
     api.get('/categories', { params: { limit: 100 } }).then(({ data }) => setCategories(data.data || [])).catch(() => {})
@@ -225,6 +241,7 @@ export default function ProductsPage() {
               select size="small" label="Categoría" value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
               sx={{ minWidth: 180, ...fieldSx(palette) }}
+              SelectProps={{ MenuProps: menuPropsConfig }}
             >
               <MenuItem value="">Todas</MenuItem>
               {activeCategories.map((c) => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
@@ -233,6 +250,7 @@ export default function ProductsPage() {
               select size="small" label="Marca" value={brandFilter}
               onChange={(e) => setBrandFilter(e.target.value)}
               sx={{ minWidth: 180, ...fieldSx(palette) }}
+              SelectProps={{ MenuProps: menuPropsConfig }}
             >
               <MenuItem value="">Todas</MenuItem>
               {activeBrands.map((b) => <MenuItem key={b.id} value={b.id}>{b.name}</MenuItem>)}
@@ -317,6 +335,7 @@ export default function ProductsPage() {
                 select fullWidth label="Categoría" value={form.categoryId}
                 onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
                 sx={fieldSx(palette)}
+                SelectProps={{ MenuProps: menuPropsConfig }}
               >
                 <MenuItem value="">Sin categoría</MenuItem>
                 {activeCategories.map((c) => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
@@ -327,6 +346,7 @@ export default function ProductsPage() {
                 select fullWidth label="Marca" value={form.brandId}
                 onChange={(e) => setForm({ ...form, brandId: e.target.value })}
                 sx={fieldSx(palette)}
+                SelectProps={{ MenuProps: menuPropsConfig }}
               >
                 <MenuItem value="">Sin marca</MenuItem>
                 {activeBrands.map((b) => <MenuItem key={b.id} value={b.id}>{b.name}</MenuItem>)}
