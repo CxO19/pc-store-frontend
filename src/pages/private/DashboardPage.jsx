@@ -26,7 +26,6 @@ export default function DashboardPage() {
   const { palette, mode } = useThemeMode()
   const isLight = mode === 'light'
 
-  // Colores inteligentes adaptados para que se lean perfecto en ambos modos
   const cardBg = isLight ? palette.paperBg : 'rgba(255, 255, 255, 0.05)'
   const cardBorder = isLight ? palette.paperBorder : '1px solid rgba(255, 255, 255, 0.12)'
   const mainTitleColor = isLight ? palette.textPrimary : '#FFFFFF'
@@ -63,7 +62,7 @@ export default function DashboardPage() {
             mb: 0.5 
           }}
         >
-          Dashboard
+          DASHBOARD
         </Typography>
         <Typography variant="body1" sx={{ color: subTitleColor, mb: 4, fontWeight: 400 }}>
           Resumen general y métricas clave del sistema

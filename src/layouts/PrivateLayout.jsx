@@ -1,11 +1,10 @@
 import { useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import {
-  Box, Drawer, AppBar, Toolbar, Typography, Avatar,
+  Box, Drawer, AppBar, Toolbar,
   List, ListItem, ListItemButton, ListItemIcon, ListItemText,
   IconButton, Divider
 } from '@mui/material'
-import ComputerIcon from '@mui/icons-material/Computer'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import PeopleIcon from '@mui/icons-material/People'
 import InventoryIcon from '@mui/icons-material/Inventory'
@@ -71,14 +70,19 @@ export default function PrivateLayout() {
       display: 'flex',
       flexDirection: 'column',
     }}>
-      {/* Logo */}
-      <Box sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-        <Avatar sx={{ bgcolor: ACCENT, width: 36, height: 36 }}>
-          <ComputerIcon fontSize="small" sx={{ color: '#20232a' }} />
-        </Avatar>
-        <Typography variant="h6" fontWeight="bold" color={textColor}>
-          PC Store
-        </Typography>
+      {/* Logo maximizado y muy visible */}
+      <Box sx={{ px: 1.5, py: 3.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Box
+          component="img"
+          src={isLight ? '/Logo-negro.png' : '/Logo-blanco.png'}
+          alt="PC Store Logo"
+          sx={{
+            height: 85, // Tamaño muy grande y llamativo
+            width: '100%',
+            maxWidth: 210, // Ocupa casi todo el ancho disponible del drawer
+            objectFit: 'contain',
+          }}
+        />
       </Box>
 
       <Divider sx={{ borderColor: dividerColor }} />
@@ -188,11 +192,16 @@ export default function PrivateLayout() {
         backdropFilter: 'blur(10px)',
         borderBottom: `1px solid ${dividerColor}`,
       }}>
-        <Toolbar>
-          <IconButton color="inherit" onClick={() => setMobileOpen(true)} sx={{ mr: 2, color: textColor }}>
+        <Toolbar sx={{ justifyContent: 'space-between', py: 1 }}>
+          <IconButton color="inherit" onClick={() => setMobileOpen(true)} sx={{ color: textColor }}>
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" fontWeight="bold" color={textColor}>PC Store</Typography>
+          <Box
+            component="img"
+            src={isLight ? '/Logo-negro.png' : '/Logo-blanco.png'}
+            alt="PC Store Logo"
+            sx={{ height: 60, width: 'auto', objectFit: 'contain', mr: 2 }}
+          />
         </Toolbar>
       </AppBar>
 
