@@ -1,29 +1,42 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import {
   Avatar, Button, TextField, Box, Typography,
   Container, Paper, CssBaseline, Grid
 } from '@mui/material'
 import PersonAddIcon from '@mui/icons-material/PersonAdd'
 import { motion } from 'framer-motion'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '../contexts/AuthContext'
 
 const ACCENT = '#63CAAC'
 const ACCENT_GLOW = 'rgba(99, 202, 172, 0.5)'
 const ACCENT_BG = 'rgba(99, 202, 172, 0.1)'
 const BG = 'linear-gradient(135deg, #20232a, #1a1a1a, #20232a)'
 
+const registerSchema = z.object({
+  firstName: z.string().min(1, 'El nombre es requerido'),
+  lastName: z.string().min(1, 'El apellido es requerido'),
+  email: z.string().min(1, 'El email es requerido').email('Email inválido'),
+  password: z.string().min(8, 'Mínimo 8 caracteres'),
+})
+
 export default function RegisterPage() {
-  const [formData, setFormData] = useState({
-    firstName: '', lastName: '', email: '', password: ''
+  // Alias: la función de la API se llama registerUser acá para no chocar
+  // con react-hook-form, que también exporta algo llamado "register".
+  const { register: registerUser, loading } = useAuth()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { firstName: '', lastName: '', email: '', password: '' },
   })
-  const { register, loading } = useAuth()
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
-
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    register(formData)
+  const onSubmit = (data) => {
+    registerUser(data)
   }
 
   return (
@@ -70,26 +83,26 @@ export default function RegisterPage() {
               Únete a PC Store
             </Typography>
 
-            <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+            <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ width: '100%' }}>
               <Grid container spacing={2}>
                 <Grid item xs={6}>
                   <TextField
-                    required fullWidth
+                    fullWidth
                     label="Nombre"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleChange}
+                    {...register('firstName')}
+                    error={!!errors.firstName}
+                    helperText={errors.firstName?.message}
                     InputLabelProps={{ shrink: true }}
                     sx={inputStyle(ACCENT)}
                   />
                 </Grid>
                 <Grid item xs={6}>
                   <TextField
-                    required fullWidth
+                    fullWidth
                     label="Apellido"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleChange}
+                    {...register('lastName')}
+                    error={!!errors.lastName}
+                    helperText={errors.lastName?.message}
                     InputLabelProps={{ shrink: true }}
                     sx={inputStyle(ACCENT)}
                   />
@@ -97,20 +110,21 @@ export default function RegisterPage() {
               </Grid>
 
               <TextField
-                margin="normal" required fullWidth
-                label="Email" name="email" type="email"
-                value={formData.email}
-                onChange={handleChange}
+                margin="normal" fullWidth
+                label="Email" type="email"
+                {...register('email')}
+                error={!!errors.email}
+                helperText={errors.email?.message}
                 InputLabelProps={{ shrink: true }}
                 sx={inputStyle(ACCENT)}
               />
               <TextField
-                margin="normal" required fullWidth
+                margin="normal" fullWidth
                 label="Contraseña (mín. 8 caracteres)"
-                name="password" type="password"
-                inputProps={{ minLength: 8 }}
-                value={formData.password}
-                onChange={handleChange}
+                type="password"
+                {...register('password')}
+                error={!!errors.password}
+                helperText={errors.password?.message}
                 InputLabelProps={{ shrink: true }}
                 sx={inputStyle(ACCENT)}
               />
@@ -153,6 +167,7 @@ const inputStyle = (accent) => ({
   },
   '& .MuiInputLabel-root.Mui-focused': { color: accent },
   '& .MuiInputLabel-shrink': { color: accent },
+  '& .MuiFormHelperText-root': { color: '#f87171' },
 })
 
 const glowBtn = (accent, glow, bg) => ({

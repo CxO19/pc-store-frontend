@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import {
   Box, Typography, Button, Chip, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, MenuItem, Grid, IconButton, Tooltip
@@ -15,11 +18,20 @@ import { fieldSx, primaryBtnSx } from '../../../theme/adminStyles'
 
 const EMPTY_FORM = { name: '', description: '', price: '', stock: '', imageUrl: '', categoryId: '', brandId: '' }
 
+const productSchema = z.object({
+  name: z.string().min(1, 'El nombre es obligatorio'),
+  description: z.string(),
+  price: z.coerce.number({ invalid_type_error: 'El precio es requerido' }).positive('El precio debe ser mayor a 0'),
+  stock: z.union([z.literal(''), z.coerce.number().min(0, 'El stock no puede ser negativo')]),
+  imageUrl: z.string(),
+  categoryId: z.string(),
+  brandId: z.string(),
+})
+
 export default function ProductsPage() {
   const { palette } = useThemeMode()
   const isLight = palette.mode === 'light'
 
-  // Colores seguros y explícitos para evitar que el texto desaparezca en oscuro
   const textColor = isLight ? '#1a1a1a' : '#ffffff'
   const textMuted = isLight ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.7)'
 
@@ -39,13 +51,37 @@ export default function ProductsPage() {
 
   const [formOpen, setFormOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
-  const [form, setForm] = useState(EMPTY_FORM)
-  const [formErrors, setFormErrors] = useState({})
   const [saving, setSaving] = useState(false)
 
   const [confirmTarget, setConfirmTarget] = useState(null)
   const [deactivating, setDeactivating] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(productSchema),
+    defaultValues: EMPTY_FORM,
+  })
+
+  const menuPropsConfig = {
+    PaperProps: {
+      sx: {
+        bgcolor: palette.paperBg || (isLight ? '#ffffff' : '#1e2130'),
+        border: `1px solid ${palette.paperBorder || (isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.1)')}`,
+        backgroundImage: 'none',
+        '& .MuiMenuItem-root': {
+          color: textColor,
+          fontSize: '0.9rem',
+          '&:hover': { bgcolor: `${palette.accent || '#63CAAC'}20` },
+          '&.Mui-selected': { bgcolor: `${palette.accent || '#63CAAC'}30`, color: palette.accent || '#63CAAC' },
+        },
+      },
+    },
+  }
 
   useEffect(() => {
     api.get('/categories', { params: { limit: 100 } }).then(({ data }) => setCategories(data.data || [])).catch(() => {})
@@ -112,14 +148,13 @@ export default function ProductsPage() {
 
   const openCreate = () => {
     setEditingId(null)
-    setForm(EMPTY_FORM)
-    setFormErrors({})
+    reset(EMPTY_FORM)
     setFormOpen(true)
   }
 
   const openEdit = (row) => {
     setEditingId(row.id)
-    setForm({
+    reset({
       name: row.name || '',
       description: row.description || '',
       price: row.price ?? '',
@@ -128,30 +163,19 @@ export default function ProductsPage() {
       categoryId: row.categoryId || '',
       brandId: row.brandId || '',
     })
-    setFormErrors({})
     setFormOpen(true)
   }
 
-  const validate = () => {
-    const errors = {}
-    if (!form.name.trim()) errors.name = 'El nombre es obligatorio'
-    if (form.price === '' || Number(form.price) <= 0) errors.price = 'El precio debe ser mayor a 0'
-    if (form.stock !== '' && Number(form.stock) < 0) errors.stock = 'El stock no puede ser negativo'
-    setFormErrors(errors)
-    return Object.keys(errors).length === 0
-  }
-
-  const handleSave = async () => {
-    if (!validate()) return
+  const onSubmit = async (data) => {
     setSaving(true)
     const payload = {
-      name: form.name.trim(),
-      description: form.description.trim() || undefined,
-      price: Number(form.price),
-      stock: form.stock === '' ? undefined : Number(form.stock),
-      imageUrl: form.imageUrl.trim() || undefined,
-      categoryId: form.categoryId || undefined,
-      brandId: form.brandId || undefined,
+      name: data.name.trim(),
+      description: data.description.trim() || undefined,
+      price: Number(data.price),
+      stock: data.stock === '' ? undefined : Number(data.stock),
+      imageUrl: data.imageUrl.trim() || undefined,
+      categoryId: data.categoryId || undefined,
+      brandId: data.brandId || undefined,
     }
     try {
       if (editingId) {
@@ -225,6 +249,7 @@ export default function ProductsPage() {
               select size="small" label="Categoría" value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
               sx={{ minWidth: 180, ...fieldSx(palette) }}
+              SelectProps={{ MenuProps: menuPropsConfig }}
             >
               <MenuItem value="">Todas</MenuItem>
               {activeCategories.map((c) => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
@@ -233,6 +258,7 @@ export default function ProductsPage() {
               select size="small" label="Marca" value={brandFilter}
               onChange={(e) => setBrandFilter(e.target.value)}
               sx={{ minWidth: 180, ...fieldSx(palette) }}
+              SelectProps={{ MenuProps: menuPropsConfig }}
             >
               <MenuItem value="">Todas</MenuItem>
               {activeBrands.map((b) => <MenuItem key={b.id} value={b.id}>{b.name}</MenuItem>)}
@@ -269,79 +295,125 @@ export default function ProductsPage() {
         fullWidth
         slotProps={{ paper: { sx: { background: palette.paperBg, backdropFilter: 'blur(16px)', borderRadius: 4, border: `1px solid ${palette.paperBorder}` } } }}
       >
-        <DialogTitle sx={{ color: textColor, fontWeight: 'bold' }}>
-          {editingId ? 'Editar producto' : 'Nuevo producto'}
-        </DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 0.5 }}>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth label="Nombre" value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                error={!!formErrors.name} helperText={formErrors.name}
-                sx={fieldSx(palette)}
-              />
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <DialogTitle sx={{ color: textColor, fontWeight: 'bold' }}>
+            {editingId ? 'Editar producto' : 'Nuevo producto'}
+          </DialogTitle>
+          <DialogContent>
+            <Grid container spacing={2} sx={{ mt: 0.5 }}>
+              <Grid size={{ xs: 12 }}>
+                <Controller
+                  name="name"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      fullWidth label="Nombre"
+                      error={!!errors.name} helperText={errors.name?.message}
+                      sx={fieldSx(palette)}
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <Controller
+                  name="description"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      fullWidth multiline minRows={2} label="Descripción"
+                      sx={fieldSx(palette)}
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid size={{ xs: 6 }}>
+                <Controller
+                  name="price"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      fullWidth type="number" label="Precio"
+                      error={!!errors.price} helperText={errors.price?.message}
+                      sx={fieldSx(palette)}
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid size={{ xs: 6 }}>
+                <Controller
+                  name="stock"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      fullWidth type="number" label="Stock"
+                      error={!!errors.stock} helperText={errors.stock?.message}
+                      sx={fieldSx(palette)}
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <Controller
+                  name="imageUrl"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      fullWidth label="URL de imagen"
+                      sx={fieldSx(palette)}
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid size={{ xs: 6 }}>
+                <Controller
+                  name="categoryId"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      select fullWidth label="Categoría"
+                      sx={fieldSx(palette)}
+                      SelectProps={{ MenuProps: menuPropsConfig }}
+                    >
+                      <MenuItem value="">Sin categoría</MenuItem>
+                      {activeCategories.map((c) => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
+                    </TextField>
+                  )}
+                />
+              </Grid>
+              <Grid size={{ xs: 6 }}>
+                <Controller
+                  name="brandId"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      select fullWidth label="Marca"
+                      sx={fieldSx(palette)}
+                      SelectProps={{ MenuProps: menuPropsConfig }}
+                    >
+                      <MenuItem value="">Sin marca</MenuItem>
+                      {activeBrands.map((b) => <MenuItem key={b.id} value={b.id}>{b.name}</MenuItem>)}
+                    </TextField>
+                  )}
+                />
+              </Grid>
             </Grid>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth multiline minRows={2} label="Descripción" value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                sx={fieldSx(palette)}
-              />
-            </Grid>
-            <Grid size={{ xs: 6 }}>
-              <TextField
-                fullWidth type="number" label="Precio" value={form.price}
-                onChange={(e) => setForm({ ...form, price: e.target.value })}
-                error={!!formErrors.price} helperText={formErrors.price}
-                sx={fieldSx(palette)}
-              />
-            </Grid>
-            <Grid size={{ xs: 6 }}>
-              <TextField
-                fullWidth type="number" label="Stock" value={form.stock}
-                onChange={(e) => setForm({ ...form, stock: e.target.value })}
-                error={!!formErrors.stock} helperText={formErrors.stock}
-                sx={fieldSx(palette)}
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth label="URL de imagen" value={form.imageUrl}
-                onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-                sx={fieldSx(palette)}
-              />
-            </Grid>
-            <Grid size={{ xs: 6 }}>
-              <TextField
-                select fullWidth label="Categoría" value={form.categoryId}
-                onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
-                sx={fieldSx(palette)}
-              >
-                <MenuItem value="">Sin categoría</MenuItem>
-                {activeCategories.map((c) => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
-              </TextField>
-            </Grid>
-            <Grid size={{ xs: 6 }}>
-              <TextField
-                select fullWidth label="Marca" value={form.brandId}
-                onChange={(e) => setForm({ ...form, brandId: e.target.value })}
-                sx={fieldSx(palette)}
-              >
-                <MenuItem value="">Sin marca</MenuItem>
-                {activeBrands.map((b) => <MenuItem key={b.id} value={b.id}>{b.name}</MenuItem>)}
-              </TextField>
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={() => setFormOpen(false)} disabled={saving} sx={{ color: textMuted }}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSave} disabled={saving} variant="contained" sx={primaryBtnSx(palette)}>
-            {saving ? 'Guardando...' : 'Guardar'}
-          </Button>
-        </DialogActions>
+          </DialogContent>
+          <DialogActions sx={{ p: 2 }}>
+            <Button onClick={() => setFormOpen(false)} disabled={saving} sx={{ color: textMuted }}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={saving} variant="contained" sx={primaryBtnSx(palette)}>
+              {saving ? 'Guardando...' : 'Guardar'}
+            </Button>
+          </DialogActions>
+        </form>
       </Dialog>
 
       <ConfirmDialog

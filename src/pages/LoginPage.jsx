@@ -1,25 +1,38 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import {
   Avatar, Button, TextField, Box,
   Typography, Container, Paper, CssBaseline
 } from '@mui/material'
 import ComputerIcon from '@mui/icons-material/Computer'
 import { motion } from 'framer-motion'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '../contexts/AuthContext'
 
 const ACCENT = '#63CAAC'
 const ACCENT_GLOW = 'rgba(99, 202, 172, 0.5)'
 const ACCENT_BG = 'rgba(99, 202, 172, 0.1)'
 const BG = 'linear-gradient(135deg, #20232a, #1a1a1a, #20232a)'
 
-export default function LoginPage() {
-  const [formData, setFormData] = useState({ email: '', password: '' })
-  const { login, loading } = useAuth()
+const loginSchema = z.object({
+  email: z.string().min(1, 'El email es requerido').email('Email inválido'),
+  password: z.string().min(1, 'La contraseña es requerida'),
+})
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    login(formData.email, formData.password)
+export default function LoginPage() {
+  const { login, loading } = useAuth()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: '', password: '' },
+  })
+
+  const onSubmit = (data) => {
+    login(data.email, data.password)
   }
 
   return (
@@ -65,27 +78,27 @@ export default function LoginPage() {
               Inicia sesión para continuar
             </Typography>
 
-            <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+            <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ width: '100%' }}>
               <TextField
                 margin="normal"
-                required
                 fullWidth
                 label="Email"
                 type="email"
                 autoFocus
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                {...register('email')}
+                error={!!errors.email}
+                helperText={errors.email?.message}
                 InputLabelProps={{ shrink: true }}
                 sx={inputStyle(ACCENT)}
               />
               <TextField
                 margin="normal"
-                required
                 fullWidth
                 label="Contraseña"
                 type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                {...register('password')}
+                error={!!errors.password}
+                helperText={errors.password?.message}
                 InputLabelProps={{ shrink: true }}
                 sx={inputStyle(ACCENT)}
               />
@@ -131,6 +144,7 @@ const inputStyle = (accent) => ({
   },
   '& .MuiInputLabel-root.Mui-focused': { color: accent },
   '& .MuiInputLabel-shrink': { color: accent },
+  '& .MuiFormHelperText-root': { color: '#f87171' },
 })
 
 const glowBtn = (accent, glow, bg) => ({

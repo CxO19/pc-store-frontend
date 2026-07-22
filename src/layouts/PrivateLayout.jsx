@@ -17,8 +17,10 @@ import MenuIcon from '@mui/icons-material/Menu'
 import LightModeIcon from '@mui/icons-material/LightMode'
 import DarkModeIcon from '@mui/icons-material/DarkMode'
 import { motion } from 'framer-motion'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '../contexts/AuthContext'
 import { useThemeMode } from '../theme/ThemeModeContext'
+import Footer from '../components/Footer'
+import Breadcrumbs from '../components/Breadcrumbs'
 
 const ACCENT = '#63CAAC'
 const DRAWER_WIDTH = 240
@@ -41,22 +43,11 @@ const clientMenuItems = [
 
 export default function PrivateLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const { logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const { mode, toggleMode, palette } = useThemeMode()
-
-  const user = (() => {
-    try {
-      return JSON.parse(localStorage.getItem('user') || '{}')
-    } catch {
-      return {}
-    }
-  })()
-  const isAdmin = user?.role === 'admin'
+  const { user, isAdmin, logout } = useAuth()
   const menuItems = isAdmin ? adminMenuItems : clientMenuItems
-
-  // Variables dinámicas según el modo
   const isLight = mode === 'light'
   const textColor = isLight ? '#1a1a1a' : '#ffffff'
   const textMutedColor = isLight ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)'
@@ -77,9 +68,9 @@ export default function PrivateLayout() {
           src={isLight ? '/Logo-negro.png' : '/Logo-blanco.png'}
           alt="PC Store Logo"
           sx={{
-            height: 85, // Tamaño muy grande y llamativo
+            height: 85,
             width: '100%',
-            maxWidth: 210, // Ocupa casi todo el ancho disponible del drawer
+            maxWidth: 210,
             objectFit: 'contain',
           }}
         />
@@ -242,8 +233,14 @@ export default function PrivateLayout() {
         mt: { xs: '64px', sm: 0 },
         p: 3,
         minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
-        <Outlet />
+        <Box sx={{ flexGrow: 1 }}>
+          <Breadcrumbs />
+          <Outlet />
+        </Box>
+        <Footer />
       </Box>
     </Box>
   )
