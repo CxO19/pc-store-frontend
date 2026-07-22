@@ -6,6 +6,7 @@ import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined
 import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined'
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined'
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos'
+import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import api from '../../../api/axios'
 import { useThemeMode } from '../../../theme/ThemeModeContext'
@@ -13,6 +14,7 @@ import { primaryBtnSx } from '../../../theme/adminStyles'
 
 export default function ClientOrdersPage() {
   const { palette } = useThemeMode()
+  const navigate = useNavigate()
   const isLight = palette.mode === 'light'
 
   const textColor = isLight ? '#1a1a1a' : '#ffffff'
@@ -89,7 +91,6 @@ export default function ClientOrdersPage() {
             boxShadow: isLight 
               ? '0 10px 30px rgba(0, 0, 0, 0.08)' 
               : '0 10px 30px -10px rgba(99, 202, 172, 0.15)',
-            backgroundImage: 'none',
             borderRadius: 4,
             p: 6,
             textAlign: 'center',
@@ -103,7 +104,12 @@ export default function ClientOrdersPage() {
           <Typography sx={{ color: textMuted, mb: 3 }}>
             Explorá nuestro catálogo de componentes y armá tu setup ideal.
           </Typography>
-          <Button variant="contained" href="/products" sx={primaryBtnSx(palette)}>
+          {/* 💡 CORREGIDO: Usando navigate en lugar de href para ir a la vista correcta */}
+          <Button 
+            variant="contained" 
+            onClick={() => navigate('/dashboard/productos')} 
+            sx={primaryBtnSx(palette)}
+          >
             Ver catálogo
           </Button>
         </Card>
