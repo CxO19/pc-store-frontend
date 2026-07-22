@@ -4,12 +4,11 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
   Box, Typography, Button, Chip, Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Grid, IconButton, Tooltip, Avatar
+  TextField, IconButton, Tooltip
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import EditIcon from '@mui/icons-material/Edit'
 import BlockIcon from '@mui/icons-material/Block'
-import BrandingWatermarkIcon from '@mui/icons-material/BrandingWatermark'
 import toast from 'react-hot-toast'
 import api from '../../../api/axios'
 import DataTable from '../../../components/admin/DataTable'
@@ -17,16 +16,19 @@ import ConfirmDialog from '../../../components/admin/ConfirmDialog'
 import { useThemeMode } from '../../../theme/ThemeModeContext'
 import { fieldSx, primaryBtnSx } from '../../../theme/adminStyles'
 
-const EMPTY_FORM = { name: '', country: '', logoUrl: '' }
+const EMPTY_FORM = { name: '', description: '' }
 
-const brandSchema = z.object({
+const categorySchema = z.object({
   name: z.string().min(1, 'El nombre es obligatorio'),
-  country: z.string(),
-  logoUrl: z.string(),
+  description: z.string(),
 })
 
-export default function BrandsPage() {
+export default function CategoriesPage() {
   const { palette } = useThemeMode()
+  const isLight = palette.mode === 'light'
+
+  const textColor = isLight ? '#1a1a1a' : '#ffffff'
+  const textMuted = isLight ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.7)'
 
   const [rows, setRows] = useState([])
   const [total, setTotal] = useState(0)
@@ -36,7 +38,6 @@ export default function BrandsPage() {
   const [sortBy, setSortBy] = useState('name')
   const [sortOrder, setSortOrder] = useState('asc')
   const [search, setSearch] = useState('')
-  const [refreshKey, setRefreshKey] = useState(0)
 
   const [formOpen, setFormOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
@@ -44,6 +45,7 @@ export default function BrandsPage() {
 
   const [confirmTarget, setConfirmTarget] = useState(null)
   const [deactivating, setDeactivating] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const {
     control,
@@ -51,7 +53,7 @@ export default function BrandsPage() {
     reset,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(brandSchema),
+    resolver: zodResolver(categorySchema),
     defaultValues: EMPTY_FORM,
   })
 
@@ -63,40 +65,33 @@ export default function BrandsPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(true)
-      api.get('/brands', { params: { search: search || undefined, page, limit, sort: sortBy, order: sortOrder } })
+      api.get('/categories', {
+        params: { search: search || undefined, page, limit, sort: sortBy, order: sortOrder },
+      })
         .then(({ data }) => {
           setRows(data.data || [])
           setTotal(data.total || 0)
         })
-        .catch(() => toast.error('No se pudieron cargar las marcas'))
+        .catch(() => toast.error('No se pudieron cargar las categorías'))
         .finally(() => setLoading(false))
     }, 300)
     return () => clearTimeout(timer)
   }, [search, page, limit, sortBy, sortOrder, refreshKey])
 
   const columns = useMemo(() => [
-    {
-      key: 'logoUrl',
-      label: '',
-      render: (row) => (
-        <Avatar variant="rounded" src={row.logoUrl || ''} sx={{ width: 32, height: 32, bgcolor: palette.accentBg }}>
-          <BrandingWatermarkIcon sx={{ fontSize: 18, color: palette.accent }} />
-        </Avatar>
-      ),
-    },
     { key: 'name', label: 'Nombre', sortable: true },
-    { key: 'country', label: 'País', render: (row) => row.country || '—' },
+    { key: 'description', label: 'Descripción', render: (row) => row.description || '—' },
     {
       key: 'isActive',
       label: 'Estado',
       render: (row) => (
         <Chip
           size="small"
-          label={row.isActive ? 'Activo' : 'Inactivo'}
+          label={row.isActive !== false ? 'Activo' : 'Inactivo'}
           sx={{
-            bgcolor: row.isActive ? palette.successBg : palette.dangerBg,
-            color: row.isActive ? palette.success : palette.danger,
-            border: `1px solid ${row.isActive ? palette.successBorder : palette.dangerBorder}`,
+            bgcolor: row.isActive !== false ? palette.successBg : palette.dangerBg,
+            color: row.isActive !== false ? palette.success : palette.danger,
+            border: `1px solid ${row.isActive !== false ? palette.successBorder : palette.dangerBorder}`,
             fontWeight: 'bold',
           }}
         />
@@ -117,7 +112,10 @@ export default function BrandsPage() {
 
   const openEdit = (row) => {
     setEditingId(row.id)
-    reset({ name: row.name || '', country: row.country || '', logoUrl: row.logoUrl || '' })
+    reset({
+      name: row.name || '',
+      description: row.description || '',
+    })
     setFormOpen(true)
   }
 
@@ -125,21 +123,20 @@ export default function BrandsPage() {
     setSaving(true)
     const payload = {
       name: data.name.trim(),
-      country: data.country.trim() || undefined,
-      logoUrl: data.logoUrl.trim() || undefined,
+      description: data.description.trim() || undefined,
     }
     try {
       if (editingId) {
-        await api.patch(`/brands/${editingId}`, payload)
-        toast.success('Marca actualizada')
+        await api.patch(`/categories/${editingId}`, payload)
+        toast.success('Categoría actualizada')
       } else {
-        await api.post('/brands', payload)
-        toast.success('Marca creada')
+        await api.post('/categories', payload)
+        toast.success('Categoría creada')
       }
       setFormOpen(false)
       setRefreshKey((k) => k + 1)
     } catch (err) {
-      const msg = err.response?.data?.message || 'No se pudo guardar la marca'
+      const msg = err.response?.data?.message || 'No se pudo guardar la categoría'
       toast.error(Array.isArray(msg) ? msg[0] : msg)
     } finally {
       setSaving(false)
@@ -150,12 +147,13 @@ export default function BrandsPage() {
     if (!confirmTarget) return
     setDeactivating(true)
     try {
-      await api.delete(`/brands/${confirmTarget.id}`)
-      toast.success('Marca desactivada')
+      await api.delete(`/categories/${confirmTarget.id}`)
+      toast.success('Categoría desactivada')
       setConfirmTarget(null)
-      setRefreshKey((k) => k + 1)
+      setRows((prev) => prev.filter((r) => r.id !== confirmTarget.id))
+      setTotal((t) => Math.max(0, t - 1))
     } catch (err) {
-      const msg = err.response?.data?.message || 'No se pudo desactivar la marca'
+      const msg = err.response?.data?.message || 'No se pudo desactivar la categoría'
       toast.error(Array.isArray(msg) ? msg[0] : msg)
     } finally {
       setDeactivating(false)
@@ -166,15 +164,15 @@ export default function BrandsPage() {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
         <Box>
-          <Typography variant="h4" fontWeight="bold" sx={{ color: palette.textPrimary, textShadow: palette.mode === 'dark' ? `0 0 30px ${palette.accentGlow}` : 'none' }} mb={0.5}>
-            Marcas
+          <Typography variant="h4" fontWeight="bold" sx={{ color: textColor, textShadow: palette.mode === 'dark' ? `0 0 30px ${palette.accentGlow}` : 'none' }} mb={0.5}>
+            Gestión de Categorías
           </Typography>
-          <Typography sx={{ color: palette.textSecondary }}>
-            {total} marca{total === 1 ? '' : 's'} registrada{total === 1 ? '' : 's'}
+          <Typography sx={{ color: textMuted }}>
+            {total} categoría{total === 1 ? '' : 's'} registrada{total === 1 ? '' : 's'}
           </Typography>
         </Box>
         <Button startIcon={<AddIcon />} onClick={openCreate} variant="contained" sx={primaryBtnSx(palette)}>
-          Nueva marca
+          Nueva categoría
         </Button>
       </Box>
 
@@ -192,7 +190,7 @@ export default function BrandsPage() {
         onSortChange={handleSort}
         search={search}
         onSearchChange={setSearch}
-        emptyMessage="No hay marcas que coincidan con la búsqueda"
+        emptyMessage="No hay categorías que coincidan con la búsqueda"
         renderActions={(row) => (
           <>
             <Tooltip title="Editar">
@@ -200,11 +198,11 @@ export default function BrandsPage() {
                 <EditIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title={row.isActive ? 'Desactivar' : 'Ya está inactiva'}>
+            <Tooltip title={row.isActive !== false ? 'Desactivar' : 'Ya está inactiva'}>
               <span>
                 <IconButton
                   size="small"
-                  disabled={!row.isActive}
+                  disabled={row.isActive === false}
                   onClick={() => setConfirmTarget(row)}
                   sx={{ color: palette.danger }}
                 >
@@ -219,60 +217,43 @@ export default function BrandsPage() {
       <Dialog
         open={formOpen}
         onClose={() => !saving && setFormOpen(false)}
-        maxWidth="xs"
+        maxWidth="sm"
         fullWidth
         slotProps={{ paper: { sx: { background: palette.paperBg, backdropFilter: 'blur(16px)', borderRadius: 4, border: `1px solid ${palette.paperBorder}` } } }}
       >
         <form onSubmit={handleSubmit(onSubmit)}>
-          <DialogTitle sx={{ color: palette.textPrimary, fontWeight: 'bold' }}>
-            {editingId ? 'Editar marca' : 'Nueva marca'}
+          <DialogTitle sx={{ color: textColor, fontWeight: 'bold' }}>
+            {editingId ? 'Editar categoría' : 'Nueva categoría'}
           </DialogTitle>
           <DialogContent>
-            <Grid container spacing={2} sx={{ mt: 0.5 }}>
-              <Grid size={{ xs: 12 }}>
-                <Controller
-                  name="name"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      fullWidth label="Nombre"
-                      error={!!errors.name} helperText={errors.name?.message}
-                      sx={fieldSx(palette)}
-                    />
-                  )}
-                />
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <Controller
-                  name="country"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      fullWidth label="País"
-                      sx={fieldSx(palette)}
-                    />
-                  )}
-                />
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <Controller
-                  name="logoUrl"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      fullWidth label="URL del logo"
-                      sx={fieldSx(palette)}
-                    />
-                  )}
-                />
-              </Grid>
-            </Grid>
+            <Box display="flex" flexDirection="column" gap={2} sx={{ mt: 1 }}>
+              <Controller
+                name="name"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth label="Nombre"
+                    error={!!errors.name} helperText={errors.name?.message}
+                    sx={fieldSx(palette)}
+                  />
+                )}
+              />
+              <Controller
+                name="description"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth multiline minRows={2} label="Descripción"
+                    sx={fieldSx(palette)}
+                  />
+                )}
+              />
+            </Box>
           </DialogContent>
           <DialogActions sx={{ p: 2 }}>
-            <Button onClick={() => setFormOpen(false)} disabled={saving} sx={{ color: palette.textSecondary }}>
+            <Button onClick={() => setFormOpen(false)} disabled={saving} sx={{ color: textMuted }}>
               Cancelar
             </Button>
             <Button type="submit" disabled={saving} variant="contained" sx={primaryBtnSx(palette)}>
@@ -284,8 +265,8 @@ export default function BrandsPage() {
 
       <ConfirmDialog
         open={!!confirmTarget}
-        title="Desactivar marca"
-        message={`¿Seguro que querés desactivar "${confirmTarget?.name}"? No se podrá asignar a nuevos productos.`}
+        title="Desactivar categoría"
+        message={`¿Seguro que querés desactivar "${confirmTarget?.name}"?`}
         confirmLabel="Desactivar"
         danger
         loading={deactivating}

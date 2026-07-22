@@ -1,165 +1,253 @@
+import { useState } from 'react'
 import {
   Box, Typography, Grid, Card, CardContent, CardMedia,
-  Chip, Button, CircularProgress, AppBar, Toolbar, Avatar, Container
+  Chip, Button, CircularProgress, TextField, InputAdornment, Container
 } from '@mui/material'
-import LogoutIcon from '@mui/icons-material/Logout'
-import ComputerIcon from '@mui/icons-material/Computer'
+import SearchIcon from '@mui/icons-material/Search'
+import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined'
+import FilterListIcon from '@mui/icons-material/FilterList'
 import { motion } from 'framer-motion'
-import { useAuth } from '../hooks/useAuth'
 import { useProducts } from '../hooks/useProducts'
+import { useThemeMode } from '../theme/ThemeModeContext'
 
 const ACCENT = '#63CAAC'
 const ACCENT_GLOW = 'rgba(99, 202, 172, 0.4)'
-const BG = 'linear-gradient(135deg, #20232a, #1a1a1a, #20232a)'
 
 export default function ProductsPage() {
-  const { logout } = useAuth()
   const { products, loading } = useProducts()
+  const { palette } = useThemeMode()
+  const isLight = palette.mode === 'light'
+
+  const textColor = isLight ? '#1a1a1a' : '#ffffff'
+  const textMuted = isLight ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.7)'
+
+  const [search, setSearch] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('ALL')
+
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase()) ||
+                          (product.description && product.description.toLowerCase().includes(search.toLowerCase()))
+    const matchesCategory = selectedCategory === 'ALL' || product.category?.name === selectedCategory
+    return matchesSearch && matchesCategory
+  })
+
+  const categories = ['ALL', ...new Set(products.map(p => p.category?.name).filter(Boolean))]
 
   return (
-    <Box sx={{ minHeight: '100vh', width: '100vw', background: BG }}>
-
-      {/* Navbar */}
-      <AppBar position="static" elevation={0} sx={{
-        background: 'rgba(255,255,255,0.03)',
-        backdropFilter: 'blur(10px)',
-        borderBottom: '1px solid rgba(255,255,255,0.07)',
-      }}>
-        <Toolbar sx={{ justifyContent: 'space-between', maxWidth: 1200, width: '100%', mx: 'auto', px: 2 }}>
-          <Box display="flex" alignItems="center" gap={1.5}>
-            <Avatar sx={{ bgcolor: ACCENT, width: 36, height: 36 }}>
-              <ComputerIcon fontSize="small" sx={{ color: '#20232a' }} />
-            </Avatar>
-            <Typography variant="h6" fontWeight="bold" color="white">
-              PC Store
+    <Container maxWidth="lg" sx={{ py: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      
+      {/* Encabezado Centrado */}
+      <Box sx={{ mb: 5, textAlign: 'center', width: '100%', maxWidth: 700 }}>
+        <motion.div initial={{ opacity: 0, y: -15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+          <Box display="flex" justifyContent="center" alignItems="center" gap={1.5} mb={1}>
+            <StorefrontOutlinedIcon sx={{ color: ACCENT, fontSize: 36 }} />
+            <Typography variant="h3" fontWeight="bold" sx={{ color: textColor, letterSpacing: '-0.5px' }}>
+              Catálogo de Componentes
             </Typography>
           </Box>
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button
-              startIcon={<LogoutIcon />}
-              onClick={logout}
-              variant="outlined"
-              sx={{
-                borderRadius: 3,
-                color: ACCENT,
-                borderColor: ACCENT,
-                fontWeight: 'bold',
-                transition: 'all 0.3s',
-                '&:hover': {
-                  borderColor: ACCENT,
-                  boxShadow: `0 0 15px ${ACCENT_GLOW}`,
-                  background: 'rgba(99,202,172,0.1)',
-                }
-              }}
-            >
-              Salir
-            </Button>
-          </motion.div>
-        </Toolbar>
-      </AppBar>
-
-      {/* Contenido */}
-      <Container maxWidth="xl" sx={{ py: 4 }}>
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Typography variant="h4" fontWeight="bold" color="white" mb={0.5}>
-            Catálogo de Componentes
-          </Typography>
-          <Typography variant="body2" color="rgba(255,255,255,0.4)" mb={4}>
-            {products.length} productos disponibles
+          <Typography variant="body1" sx={{ color: textMuted }}>
+            Explorá el stock en tiempo real, encontrá los mejores componentes para tu setup y armá tu equipo de alto rendimiento.
           </Typography>
         </motion.div>
+      </Box>
 
-        {loading ? (
-          <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" mt={10} gap={2}>
-            <CircularProgress sx={{ color: ACCENT }} size={60} />
-            <Typography color="rgba(255,255,255,0.4)">Cargando productos...</Typography>
-          </Box>
-        ) : (
-          <Grid container spacing={3} justifyContent="center">
-            {products.map((product, index) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.07, duration: 0.4 }}
-                  whileHover={{ y: -6 }}
-                  style={{ height: '100%' }}
-                >
-                  <Card sx={{
-                    height: '100%',
-                    borderRadius: 4,
-                    background: 'rgba(255,255,255,0.04)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255,255,255,0.07)',
-                    transition: 'all 0.3s ease',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    '&:hover': {
-                      border: `1px solid ${ACCENT}`,
-                      boxShadow: `0 0 25px ${ACCENT_GLOW}`,
-                    }
-                  }}>
+      {/* Bloque de Búsqueda y Filtros Centrado */}
+      <Box sx={{ width: '100%', maxWidth: 900, mb: 6, display: 'flex', flexDirection: 'column', gap: 3 }}>
+        
+        {/* Barra de Búsqueda Principal Centrada */}
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}>
+          <Card sx={{
+            borderRadius: 4,
+            backgroundColor: palette.paperBg,
+            backdropFilter: 'blur(16px)',
+            border: `1px solid ${palette.paperBorder}`,
+            p: 3,
+            boxShadow: isLight 
+              ? '0 10px 30px rgba(0, 0, 0, 0.08)' 
+              : '0 10px 30px -10px rgba(99, 202, 172, 0.15)',
+            backgroundImage: 'none',
+            backgroundImage: 'none',
+          }}>
+            <TextField
+              placeholder="Buscar componente por nombre o descripción..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              size="medium"
+              fullWidth
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  color: textColor,
+                  bgcolor: isLight ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.03)',
+                  borderRadius: 3,
+                  border: `1px solid ${palette.paperBorder}`,
+                  transition: 'all 0.3s',
+                  '& fieldset': { border: 'none' },
+                  '&:hover': { border: `1px solid ${ACCENT}50` },
+                  '&.Mui-focused': { border: `1px solid ${ACCENT}`, boxShadow: `0 0 15px ${ACCENT_GLOW}` },
+                },
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: textMuted }} />
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            {/* Categorías en forma de Píldoras Centradas */}
+            {categories.length > 1 && (
+              <Box display="flex" justifyContent="center" gap={1.5} flexWrap="wrap" mt={3}>
+                {categories.map((cat) => (
+                  <Chip
+                    key={cat}
+                    label={cat === 'ALL' ? 'Todos los componentes' : cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    sx={{
+                      bgcolor: selectedCategory === cat ? ACCENT : (isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.03)'),
+                      color: selectedCategory === cat ? '#1a1a1a' : textColor,
+                      fontWeight: 'bold',
+                      px: 1.5,
+                      py: 2,
+                      border: `1px solid ${selectedCategory === cat ? ACCENT : palette.paperBorder}`,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        bgcolor: selectedCategory === cat ? ACCENT : `${ACCENT}20`,
+                      }
+                    }}
+                  />
+                ))}
+              </Box>
+            )}
+          </Card>
+        </motion.div>
+
+      </Box>
+
+      {/* Grid de Productos Centrado */}
+      {loading ? (
+        <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" mt={6} gap={2}>
+          <CircularProgress sx={{ color: ACCENT }} size={50} />
+          <Typography sx={{ color: textMuted }}>Cargando catálogo...</Typography>
+        </Box>
+      ) : filteredProducts.length === 0 ? (
+        <Box
+          sx={{
+            textAlign: 'center',
+            py: 8,
+            px: 4,
+            width: '100%',
+            maxWidth: 600,
+            backgroundColor: palette.paperBg,
+            border: `1px solid ${palette.paperBorder}`,
+            borderRadius: 4,
+            boxShadow: isLight 
+              ? '0 10px 30px rgba(0, 0, 0, 0.08)' 
+              : '0 10px 30px -10px rgba(99, 202, 172, 0.15)',
+            backgroundImage: 'none',
+          }}
+        >
+          <Typography variant="h6" fontWeight="bold" sx={{ color: textColor, mb: 1 }}>
+            No se encontraron productos
+          </Typography>
+          <Typography variant="body2" sx={{ color: textMuted }}>
+            Intenta buscando con otro término o categoría.
+          </Typography>
+        </Box>
+      ) : (
+        <Grid container spacing={3} justifyContent="center" sx={{ width: '100%' }}>
+          {filteredProducts.map((product, index) => (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
+              <motion.div
+                initial={{ opacity: 0, y: 25 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05, duration: 0.3 }}
+                whileHover={{ y: -6 }}
+                style={{ height: '100%' }}
+              >
+                <Card sx={{
+                  height: '100%',
+                  borderRadius: 4,
+                  backgroundColor: palette.paperBg,
+                  backdropFilter: 'blur(10px)',
+                  border: `1px solid ${palette.paperBorder}`,
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  backgroundImage: 'none',
+                  boxShadow: isLight ? '0 10px 30px rgba(0,0,0,0.05)' : 'none',
+                  '&:hover': {
+                    border: `1px solid ${ACCENT}`,
+                    boxShadow: isLight ? '0 15px 35px rgba(99,202,172,0.15)' : `0 10px 30px -10px ${ACCENT_GLOW}`,
+                  }
+                }}>
+                  <Box sx={{ position: 'relative', overflow: 'hidden' }}>
                     <CardMedia
                       component="img"
-                      height="160"
-                      image={product.imageUrl || `https://placehold.co/300x160/20232a/63CAAC?text=${encodeURIComponent(product.name)}`}
+                      height="180"
+                      image={product.imageUrl || `https://placehold.co/300x180/121212/63CAAC?text=${encodeURIComponent(product.name)}`}
                       alt={product.name}
-                      sx={{ objectFit: 'contain', bgcolor: 'rgba(0,0,0,0.2)', p: 1 }}
+                      sx={{ objectFit: 'contain', bgcolor: isLight ? 'rgba(0,0,0,0.02)' : 'rgba(0,0,0,0.2)', p: 2, transition: 'transform 0.3s', '&:hover': { transform: 'scale(1.05)' } }}
                     />
-                    <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                      <Typography variant="h6" fontWeight="bold" color="white" noWrap>
-                        {product.name}
+                    {product.category && (
+                      <Chip
+                        label={product.category.name}
+                        size="small"
+                        sx={{
+                          position: 'absolute',
+                          top: 12,
+                          left: 12,
+                          bgcolor: isLight ? 'rgba(255,255,255,0.9)' : 'rgba(20,20,20,0.85)',
+                          backdropFilter: 'blur(8px)',
+                          color: ACCENT,
+                          fontWeight: 'bold',
+                          border: `1px solid ${ACCENT}50`,
+                        }}
+                      />
+                    )}
+                  </Box>
+
+                  <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 1.5, p: 2.5 }}>
+                    <Typography variant="h6" fontWeight="bold" sx={{ color: textColor }} noWrap title={product.name}>
+                      {product.name}
+                    </Typography>
+                    
+                    <Typography variant="body2" sx={{
+                      color: textMuted,
+                      overflow: 'hidden',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      minHeight: 40,
+                      flexGrow: 1,
+                      lineHeight: 1.4,
+                    }}>
+                      {product.description || 'Sin descripción disponible para este componente.'}
+                    </Typography>
+
+                    <Box display="flex" justifyContent="space-between" alignItems="center" mt={1}>
+                      <Typography variant="h5" fontWeight="bold" sx={{ color: ACCENT }}>
+                        ${Number(product.price).toFixed(2)}
                       </Typography>
-                      <Typography variant="body2" color="rgba(255,255,255,0.45)" sx={{
-                        overflow: 'hidden',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        minHeight: 40,
-                        flexGrow: 1,
-                      }}>
-                        {product.description || 'Sin descripción'}
-                      </Typography>
-                      <Box display="flex" justifyContent="space-between" alignItems="center">
-                        <Typography variant="h6" fontWeight="bold" sx={{ color: ACCENT }}>
-                          ${Number(product.price).toFixed(2)}
-                        </Typography>
-                        <Chip
-                          label={product.stock > 0 ? `Stock: ${product.stock}` : 'Sin stock'}
-                          size="small"
-                          sx={{
-                            bgcolor: product.stock > 0 ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
-                            color: product.stock > 0 ? '#4ade80' : '#f87171',
-                            border: `1px solid ${product.stock > 0 ? '#4ade80' : '#f87171'}`,
-                            fontWeight: 'bold',
-                          }}
-                        />
-                      </Box>
-                      {product.category && (
-                        <Chip
-                          label={product.category.name}
-                          size="small"
-                          sx={{
-                            alignSelf: 'flex-start',
-                            bgcolor: 'rgba(99,202,172,0.1)',
-                            color: ACCENT,
-                            border: `1px solid rgba(99,202,172,0.3)`,
-                          }}
-                        />
-                      )}
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </Grid>
-            ))}
-          </Grid>
-        )}
-      </Container>
-    </Box>
+                      <Chip
+                        label={product.stock > 0 ? `Stock: ${product.stock}` : 'Agotado'}
+                        size="small"
+                        sx={{
+                          bgcolor: product.stock > 0 ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
+                          color: product.stock > 0 ? '#4ade80' : '#f87171',
+                          border: `1px solid ${product.stock > 0 ? '#4ade80' : '#f87171'}`,
+                          fontWeight: 'bold',
+                        }}
+                      />
+                    </Box>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </Grid>
+          ))}
+        </Grid>
+      )}
+    </Container>
   )
 }
