@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import {
   Box, Typography, Button, Chip, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, IconButton, Tooltip
@@ -14,6 +17,11 @@ import { useThemeMode } from '../../../theme/ThemeModeContext'
 import { fieldSx, primaryBtnSx } from '../../../theme/adminStyles'
 
 const EMPTY_FORM = { name: '', description: '' }
+
+const categorySchema = z.object({
+  name: z.string().min(1, 'El nombre es obligatorio'),
+  description: z.string(),
+})
 
 export default function CategoriesPage() {
   const { palette } = useThemeMode()
@@ -33,13 +41,21 @@ export default function CategoriesPage() {
 
   const [formOpen, setFormOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
-  const [form, setForm] = useState(EMPTY_FORM)
-  const [formErrors, setFormErrors] = useState({})
   const [saving, setSaving] = useState(false)
 
   const [confirmTarget, setConfirmTarget] = useState(null)
   const [deactivating, setDeactivating] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(categorySchema),
+    defaultValues: EMPTY_FORM,
+  })
 
   useEffect(() => {
     const timer = setTimeout(() => setPage(1), 0)
@@ -50,10 +66,7 @@ export default function CategoriesPage() {
     const timer = setTimeout(() => {
       setLoading(true)
       api.get('/categories', {
-        params: {
-          search: search || undefined,
-          page, limit, sort: sortBy, order: sortOrder,
-        },
+        params: { search: search || undefined, page, limit, sort: sortBy, order: sortOrder },
       })
         .then(({ data }) => {
           setRows(data.data || [])
@@ -93,34 +106,24 @@ export default function CategoriesPage() {
 
   const openCreate = () => {
     setEditingId(null)
-    setForm(EMPTY_FORM)
-    setFormErrors({})
+    reset(EMPTY_FORM)
     setFormOpen(true)
   }
 
   const openEdit = (row) => {
     setEditingId(row.id)
-    setForm({
+    reset({
       name: row.name || '',
       description: row.description || '',
     })
-    setFormErrors({})
     setFormOpen(true)
   }
 
-  const validate = () => {
-    const errors = {}
-    if (!form.name.trim()) errors.name = 'El nombre es obligatorio'
-    setFormErrors(errors)
-    return Object.keys(errors).length === 0
-  }
-
-  const handleSave = async () => {
-    if (!validate()) return
+  const onSubmit = async (data) => {
     setSaving(true)
     const payload = {
-      name: form.name.trim(),
-      description: form.description.trim() || undefined,
+      name: data.name.trim(),
+      description: data.description.trim() || undefined,
     }
     try {
       if (editingId) {
@@ -173,7 +176,6 @@ export default function CategoriesPage() {
         </Button>
       </Box>
 
-      {/* Si tu DataTable acepta propiedades de estilo en el contenedor o papel, pásalas aquí: */}
       <DataTable
         columns={columns}
         rows={rows}
@@ -189,16 +191,6 @@ export default function CategoriesPage() {
         search={search}
         onSearchChange={setSearch}
         emptyMessage="No hay categorías que coincidan con la búsqueda"
-        // Propiedad para alinear el fondo del contenedor de la tabla con el paperBg de tu tema
-        sx={{
-          backgroundColor: palette.paperBg,
-          backgroundImage: 'none',
-          border: `1px solid ${palette.paperBorder}`,
-          borderRadius: 4,
-          '& .MuiToolbar-root, & thead': {
-            backgroundColor: 'transparent',
-          },
-        }}
         renderActions={(row) => (
           <>
             <Tooltip title="Editar">
@@ -229,32 +221,46 @@ export default function CategoriesPage() {
         fullWidth
         slotProps={{ paper: { sx: { background: palette.paperBg, backdropFilter: 'blur(16px)', borderRadius: 4, border: `1px solid ${palette.paperBorder}` } } }}
       >
-        <DialogTitle sx={{ color: textColor, fontWeight: 'bold' }}>
-          {editingId ? 'Editar categoría' : 'Nueva categoría'}
-        </DialogTitle>
-        <DialogContent>
-          <Box display="flex" flexDirection="column" gap={2} sx={{ mt: 1 }}>
-            <TextField
-              fullWidth label="Nombre" value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              error={!!formErrors.name} helperText={formErrors.name}
-              sx={fieldSx(palette)}
-            />
-            <TextField
-              fullWidth multiline minRows={2} label="Descripción" value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              sx={fieldSx(palette)}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={() => setFormOpen(false)} disabled={saving} sx={{ color: textMuted }}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSave} disabled={saving} variant="contained" sx={primaryBtnSx(palette)}>
-            {saving ? 'Guardando...' : 'Guardar'}
-          </Button>
-        </DialogActions>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <DialogTitle sx={{ color: textColor, fontWeight: 'bold' }}>
+            {editingId ? 'Editar categoría' : 'Nueva categoría'}
+          </DialogTitle>
+          <DialogContent>
+            <Box display="flex" flexDirection="column" gap={2} sx={{ mt: 1 }}>
+              <Controller
+                name="name"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth label="Nombre"
+                    error={!!errors.name} helperText={errors.name?.message}
+                    sx={fieldSx(palette)}
+                  />
+                )}
+              />
+              <Controller
+                name="description"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth multiline minRows={2} label="Descripción"
+                    sx={fieldSx(palette)}
+                  />
+                )}
+              />
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ p: 2 }}>
+            <Button onClick={() => setFormOpen(false)} disabled={saving} sx={{ color: textMuted }}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={saving} variant="contained" sx={primaryBtnSx(palette)}>
+              {saving ? 'Guardando...' : 'Guardar'}
+            </Button>
+          </DialogActions>
+        </form>
       </Dialog>
 
       <ConfirmDialog

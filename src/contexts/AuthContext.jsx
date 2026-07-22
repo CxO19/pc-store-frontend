@@ -42,7 +42,7 @@ export function AuthProvider({ children }) {
         id: payload?.sub,
         email: payload?.email,
         role: payload?.role,
-    }
+        }
 
       localStorage.setItem('token', newToken)
       localStorage.setItem('user', JSON.stringify(newUser))

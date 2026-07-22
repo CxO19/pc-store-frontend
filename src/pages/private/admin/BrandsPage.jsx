@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import {
   Box, Typography, Button, Chip, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Grid, IconButton, Tooltip, Avatar
@@ -16,6 +19,12 @@ import { fieldSx, primaryBtnSx } from '../../../theme/adminStyles'
 
 const EMPTY_FORM = { name: '', country: '', logoUrl: '' }
 
+const brandSchema = z.object({
+  name: z.string().min(1, 'El nombre es obligatorio'),
+  country: z.string(),
+  logoUrl: z.string(),
+})
+
 export default function BrandsPage() {
   const { palette } = useThemeMode()
 
@@ -31,12 +40,20 @@ export default function BrandsPage() {
 
   const [formOpen, setFormOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
-  const [form, setForm] = useState(EMPTY_FORM)
-  const [formErrors, setFormErrors] = useState({})
   const [saving, setSaving] = useState(false)
 
   const [confirmTarget, setConfirmTarget] = useState(null)
   const [deactivating, setDeactivating] = useState(false)
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(brandSchema),
+    defaultValues: EMPTY_FORM,
+  })
 
   useEffect(() => {
     const timer = setTimeout(() => setPage(1), 0)
@@ -94,32 +111,22 @@ export default function BrandsPage() {
 
   const openCreate = () => {
     setEditingId(null)
-    setForm(EMPTY_FORM)
-    setFormErrors({})
+    reset(EMPTY_FORM)
     setFormOpen(true)
   }
 
   const openEdit = (row) => {
     setEditingId(row.id)
-    setForm({ name: row.name || '', country: row.country || '', logoUrl: row.logoUrl || '' })
-    setFormErrors({})
+    reset({ name: row.name || '', country: row.country || '', logoUrl: row.logoUrl || '' })
     setFormOpen(true)
   }
 
-  const validate = () => {
-    const errors = {}
-    if (!form.name.trim()) errors.name = 'El nombre es obligatorio'
-    setFormErrors(errors)
-    return Object.keys(errors).length === 0
-  }
-
-  const handleSave = async () => {
-    if (!validate()) return
+  const onSubmit = async (data) => {
     setSaving(true)
     const payload = {
-      name: form.name.trim(),
-      country: form.country.trim() || undefined,
-      logoUrl: form.logoUrl.trim() || undefined,
+      name: data.name.trim(),
+      country: data.country.trim() || undefined,
+      logoUrl: data.logoUrl.trim() || undefined,
     }
     try {
       if (editingId) {
@@ -216,43 +223,63 @@ export default function BrandsPage() {
         fullWidth
         slotProps={{ paper: { sx: { background: palette.paperBg, backdropFilter: 'blur(16px)', borderRadius: 4, border: `1px solid ${palette.paperBorder}` } } }}
       >
-        <DialogTitle sx={{ color: palette.textPrimary, fontWeight: 'bold' }}>
-          {editingId ? 'Editar marca' : 'Nueva marca'}
-        </DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 0.5 }}>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth label="Nombre" value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                error={!!formErrors.name} helperText={formErrors.name}
-                sx={fieldSx(palette)}
-              />
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <DialogTitle sx={{ color: palette.textPrimary, fontWeight: 'bold' }}>
+            {editingId ? 'Editar marca' : 'Nueva marca'}
+          </DialogTitle>
+          <DialogContent>
+            <Grid container spacing={2} sx={{ mt: 0.5 }}>
+              <Grid size={{ xs: 12 }}>
+                <Controller
+                  name="name"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      fullWidth label="Nombre"
+                      error={!!errors.name} helperText={errors.name?.message}
+                      sx={fieldSx(palette)}
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <Controller
+                  name="country"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      fullWidth label="País"
+                      sx={fieldSx(palette)}
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <Controller
+                  name="logoUrl"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      fullWidth label="URL del logo"
+                      sx={fieldSx(palette)}
+                    />
+                  )}
+                />
+              </Grid>
             </Grid>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth label="País" value={form.country}
-                onChange={(e) => setForm({ ...form, country: e.target.value })}
-                sx={fieldSx(palette)}
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth label="URL del logo" value={form.logoUrl}
-                onChange={(e) => setForm({ ...form, logoUrl: e.target.value })}
-                sx={fieldSx(palette)}
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={() => setFormOpen(false)} disabled={saving} sx={{ color: palette.textSecondary }}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSave} disabled={saving} variant="contained" sx={primaryBtnSx(palette)}>
-            {saving ? 'Guardando...' : 'Guardar'}
-          </Button>
-        </DialogActions>
+          </DialogContent>
+          <DialogActions sx={{ p: 2 }}>
+            <Button onClick={() => setFormOpen(false)} disabled={saving} sx={{ color: palette.textSecondary }}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={saving} variant="contained" sx={primaryBtnSx(palette)}>
+              {saving ? 'Guardando...' : 'Guardar'}
+            </Button>
+          </DialogActions>
+        </form>
       </Dialog>
 
       <ConfirmDialog
