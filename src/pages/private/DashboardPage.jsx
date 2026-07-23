@@ -33,10 +33,10 @@ export default function DashboardPage() {
   const axisTickColor = isLight ? palette.textSecondary : 'rgba(255, 255, 255, 0.7)'
 
   const statCards = [
-    { title: 'Usuarios', value: stats.users ?? 0, icon: <PeopleIcon fontSize="medium" />, color: '#63CAAC' },
-    { title: 'Productos', value: stats.products ?? 0, icon: <InventoryIcon fontSize="medium" />, color: '#818cf8' },
-    { title: 'Categorías', value: stats.categories ?? 0, icon: <CategoryIcon fontSize="medium" />, color: '#f59e0b' },
-    { title: 'Órdenes', value: stats.orders ?? 0, icon: <ShoppingCartIcon fontSize="medium" />, color: '#f87171' },
+    { title: 'Usuarios', value: stats.users ?? 0, icon: <PeopleIcon fontSize="medium" />, color: '#63CAAC', gradient: 'linear-gradient(90deg, #63CAAC, #4ADE80)' },
+    { title: 'Productos', value: stats.products ?? 0, icon: <InventoryIcon fontSize="medium" />, color: '#818cf8', gradient: 'linear-gradient(90deg, #818cf8, #6366f1)' },
+    { title: 'Categorías', value: stats.categories ?? 0, icon: <CategoryIcon fontSize="medium" />, color: '#f59e0b', gradient: 'linear-gradient(90deg, #f59e0b, #f97316)' },
+    { title: 'Órdenes', value: stats.orders ?? 0, icon: <ShoppingCartIcon fontSize="medium" />, color: '#f87171', gradient: 'linear-gradient(90deg, #f87171, #ef4444)' },
   ]
 
   if (loading) {
@@ -52,21 +52,11 @@ export default function DashboardPage() {
       
       {/* --- ENCABEZADO --- */}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-        <Typography 
-          variant="h4" 
-          fontWeight={800} 
-          sx={{ 
-            color: mainTitleColor, 
-            letterSpacing: '-0.02em', 
-            textShadow: isLight ? 'none' : '0 2px 10px rgba(0,0,0,0.5)',
-            mb: 0.5 
-          }}
-        >
-          DASHBOARD
-        </Typography>
-        <Typography variant="body1" sx={{ color: subTitleColor, mb: 4, fontWeight: 400 }}>
-          Resumen general y métricas clave del sistema
-        </Typography>
+        <Box display="flex" alignItems="center" gap={2} mb={0.5}>
+          <Box sx={{ width: 4, height: 32, borderRadius: 4, background: `linear-gradient(180deg, ${palette.accent}, transparent)` }} />
+          <Typography variant="h4" fontWeight={800} sx={{ color: mainTitleColor, letterSpacing: '-0.02em' }}>Dashboard</Typography>
+        </Box>
+        <Typography variant="body1" sx={{ color: subTitleColor, mb: 4, fontWeight: 400 }}>Resumen general y métricas clave del sistema</Typography>
       </motion.div>
 
       {/* --- TARJETAS EN FILA HORIZONTAL (4 COLUMNAS) --- */}
@@ -92,6 +82,7 @@ export default function DashboardPage() {
                 backdropFilter: 'blur(16px)',
                 border: cardBorder,
                 borderRadius: 3,
+                overflow: 'hidden',
                 boxShadow: isLight ? palette.paperShadow : '0 4px 20px rgba(0,0,0,0.2)',
                 transition: 'all 0.3s ease',
                 '&:hover': {
@@ -100,9 +91,10 @@ export default function DashboardPage() {
                 }
               }}
             >
+              <Box sx={{ height: 4, background: card.gradient }} />
               <CardContent sx={{ p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box>
-                  <Typography variant="body2" sx={{ color: subTitleColor, fontWeight: 600, mb: 0.5 }}>
+                  <Typography variant="body2" sx={{ color: subTitleColor, fontWeight: 600, mb: 0.5, textTransform: 'uppercase', letterSpacing: 1, fontSize: '0.75rem' }}>
                     {card.title}
                   </Typography>
                   <Typography variant="h4" fontWeight={800} sx={{ color: mainTitleColor }}>
@@ -114,8 +106,8 @@ export default function DashboardPage() {
                     width: 48,
                     height: 48,
                     borderRadius: 2.5,
-                    bgcolor: `${card.color}22`,
-                    border: `1px solid ${card.color}44`,
+                    bgcolor: `${card.color}18`,
+                    border: `1px solid ${card.color}33`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',

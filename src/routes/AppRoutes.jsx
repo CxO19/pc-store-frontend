@@ -4,6 +4,7 @@ import LoginPage from '../pages/LoginPage'
 import RegisterPage from '../pages/RegisterPage'
 import ProductsPage from '../pages/ProductsPage'
 import ProductDetailPage from '../pages/public/ProductDetailPage'
+import CartPage from '../pages/public/CartPage'
 import PrivateLayout from '../layouts/PrivateLayout'
 import DashboardPage from '../pages/private/DashboardPage'
 import UsersPage from '../pages/private/admin/UsersPage'
@@ -23,6 +24,7 @@ export default function AppRoutes() {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/productos" element={<ProductsPage />} />
       <Route path="/productos/:id" element={<ProductDetailPage />} />
+      <Route path="/carrito" element={<CartPage />} />
 
       <Route path="/dashboard" element={<PrivateRoute><PrivateLayout /></PrivateRoute>}>
         <Route index element={<DashboardPage />} />

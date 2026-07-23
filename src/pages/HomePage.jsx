@@ -1,354 +1,239 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
-  Box, Typography, Button, AppBar, Toolbar, Avatar, Container, Card, CardContent,
-  Accordion, AccordionSummary, AccordionDetails, Divider, Chip
+  Box, Typography, Button, Container, Card, CardContent, CardMedia,
+  Accordion, AccordionSummary, AccordionDetails, Divider, Chip, Grid, IconButton
 } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import ComputerIcon from '@mui/icons-material/Computer'
-import SpeedIcon from '@mui/icons-material/Speed'
-import SecurityIcon from '@mui/icons-material/Security'
-import StorefrontIcon from '@mui/icons-material/Storefront'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
-import MemoryIcon from '@mui/icons-material/Memory'
-import StorageIcon from '@mui/icons-material/Storage'
-import DeveloperBoardIcon from '@mui/icons-material/DeveloperBoard'
-import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturing'
-import MonitorIcon from '@mui/icons-material/Monitor'
-import PowerIcon from '@mui/icons-material/Power'
-import VerifiedIcon from '@mui/icons-material/Verified'
-import LocalShippingIcon from '@mui/icons-material/LocalShipping'
-import SupportAgentIcon from '@mui/icons-material/SupportAgent'
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'
-import StarIcon from '@mui/icons-material/Star'
-import EmailIcon from '@mui/icons-material/Email'
-import PhoneIcon from '@mui/icons-material/Phone'
-import LocationOnIcon from '@mui/icons-material/LocationOn'
-import { motion } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
-import heroImage from '../assets/hero.png'
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew'
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos'
+import { motion, AnimatePresence } from 'framer-motion'
+import mockProducts from '../data/mockProducts'
+import { useCart } from '../contexts/CartContext'
+import toast from 'react-hot-toast'
 
-const ACCENT = '#63CAAC'
-const ACCENT_GLOW = 'rgba(99, 202, 172, 0.4)'
-const BG = 'linear-gradient(135deg, #20232a, #1a1a1a, #20232a)'
+// ===== PALETA TECH =====
+const C = {
+  accent: '#00e5a0',
+  accentHover: '#00c48c',
+  accent2: '#4ade80',
+  text: '#ffffff',
+  text2: '#c5cad3',
+  text3: '#888888',
+  card: '#0a0a0f',
+  cardHover: '#0f0f15',
+  border: 'rgba(0,229,160,0.08)',
+  borderHover: 'rgba(0,229,160,0.2)',
+}
 
-const fadeUp = { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, margin: '-50px' }, transition: { duration: 0.5 } }
+const categories = [
+  { title: 'Procesadores', desc: 'Intel Core i9, AMD Ryzen 9 y más', gradient: 'linear-gradient(135deg, #0a0a0f, #0a0f10)', color: '#00e5a0' },
+  { title: 'Motherboards', desc: 'ASUS, MSI, Gigabyte para tu build', gradient: 'linear-gradient(135deg, #0a0a0f, #0f0f0a)', color: '#4ade80' },
+  { title: 'Memoria RAM', desc: 'DDR5, DDR4 de alto rendimiento', gradient: 'linear-gradient(135deg, #0a0a0f, #0f0a0a)', color: '#34d399' },
+  { title: 'Almacenamiento', desc: 'SSD NVMe, SATA de 256GB a 4TB', gradient: 'linear-gradient(135deg, #0a0a0f, #0a0f0f)', color: '#2dd4bf' },
+  { title: 'Tarjetas Gráficas', desc: 'NVIDIA RTX 4090, AMD RX 7900', gradient: 'linear-gradient(135deg, #0a0a0f, #0f0a0f)', color: '#a78bfa' },
+  { title: 'Fuentes de Poder', desc: '80 Plus Gold, Platinum, 650W-1200W', gradient: 'linear-gradient(135deg, #0a0a0f, #0a0a0a)', color: '#f59e0b' },
+]
+
+const slides = [
+  { img: '/images/hero-1.png', tag: 'PC STORE', title: 'Componentes de alto rendimiento', desc: 'Validación inteligente de compatibilidad en tiempo real.' },
+  { img: '/images/hero-2.png', tag: 'ARDUINO', title: 'Microcontroladores para crear', desc: 'Placas, sensores y módulos para electrónica y robótica.' },
+  { img: '/images/hero-3.png', tag: 'RASPBERRY PI', title: 'Computadoras de placa única', desc: 'IoT, automatización y desarrollo en un solo lugar.' },
+]
 
 export default function HomePage() {
   const navigate = useNavigate()
-  const [expandedFaq, setExpandedFaq] = useState(false)
+  const { addToCart } = useCart()
+  const [slide, setSlide] = useState(0)
+  const [faqOpen, setFaqOpen] = useState(false)
 
-  const faqs = [
-    { q: '¿Cómo funciona la validación de compatibilidad?', a: 'Nuestro sistema cruza especificaciones técnicas como socket de CPU, tipo de RAM, factor de forma y consumo energético para garantizar que los componentes seleccionados sean 100% compatibles entre sí.' },
-    { q: '¿Qué métodos de pago aceptan?', a: 'Aceptamos tarjetas de crédito/débito (Visa, Mastercard), transferencias bancarias y pagos en efectivo en puntos autorizados.' },
-    { q: '¿Cuánto tardan los envíos?', a: 'Los envíos dentro de la ciudad tardan de 24 a 48 horas hábiles. Envíos nacionales de 3 a 5 días hábiles. Todos los envíos son rastreados.' },
-    { q: '¿Ofrecen garantía en los componentes?', a: 'Sí, todos nuestros productos cuentan con garantía oficial del fabricante. Además ofrecemos 30 días de garantía directa con PC Store para cambios por defectos.' },
-    { q: '¿Puedo devolver un producto?', a: 'Tienes hasta 15 días naturales para realizar devoluciones. El producto debe estar en su empaque original y sin signos de uso.' },
-  ]
+  useEffect(() => {
+    const t = setInterval(() => setSlide(s => (s + 1) % slides.length), 5000)
+    return () => clearInterval(t)
+  }, [])
+
+  const featured = mockProducts.slice(0, 8)
 
   return (
-    <Box sx={{ minHeight: '100vh', width: '100vw', background: BG, color: '#FFFFFF', overflowX: 'hidden' }}>
+    <Box sx={{ bgcolor: '#000', color: C.text, minHeight: '100vh', overflowX: 'hidden', position: 'relative' }}>
 
-      {/* ============ NAVBAR ============ */}
-      <AppBar position="sticky" elevation={0} sx={{ background: 'rgba(18,18,18,0.92)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)', zIndex: 100 }}>
-        <Toolbar sx={{ justifyContent: 'space-between', maxWidth: 1200, width: '100%', mx: 'auto', px: 3 }}>
-          <Box display="flex" alignItems="center" gap={1.5}>
-            <Avatar sx={{ bgcolor: ACCENT, width: 38, height: 38, boxShadow: `0 0 12px ${ACCENT_GLOW}` }}>
-              <ComputerIcon fontSize="small" sx={{ color: '#20232a' }} />
-            </Avatar>
-            <Typography variant="h6" fontWeight="bold" color="#FFFFFF">PC Store</Typography>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button onClick={() => navigate('/login')} variant="outlined"
-                sx={{ borderRadius: 3, color: ACCENT, borderColor: ACCENT, fontWeight: 'bold', textTransform: 'none', '&:hover': { borderColor: ACCENT, boxShadow: `0 0 15px ${ACCENT_GLOW}`, background: 'rgba(99,202,172,0.1)' } }}>
-                Iniciar sesión
-              </Button>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button onClick={() => navigate('/register')} variant="contained"
-                sx={{ borderRadius: 3, bgcolor: ACCENT, color: '#20232a', fontWeight: 'bold', textTransform: 'none', '&:hover': { bgcolor: ACCENT, boxShadow: `0 0 20px ${ACCENT_GLOW}`, opacity: 0.9 } }}>
-                Registrarse
-              </Button>
-            </motion.div>
-          </Box>
-        </Toolbar>
-      </AppBar>
+      {/* ===== FONDO ANIMADO ===== */}
+      <Box sx={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
+        <Box sx={{ position: 'absolute', inset: 0, backgroundImage: `radial-gradient(circle, ${C.accent}08 1px, transparent 1px)`, backgroundSize: '50px 50px', opacity: 0.4 }} />
+        <Box sx={{ position: 'absolute', top: '-15%', right: '-10%', width: '50%', height: '60%', background: `radial-gradient(ellipse, ${C.accent}06 0%, transparent 70%)`, filter: 'blur(80px)' }} />
+        <Box sx={{ position: 'absolute', bottom: '-10%', left: '-10%', width: '40%', height: '50%', background: `radial-gradient(ellipse, ${C.accent2}04 0%, transparent 70%)`, filter: 'blur(80px)' }} />
+      </Box>
 
-      {/* ============ HERO ============ */}
-      <Container maxWidth="lg" sx={{ pt: { xs: 6, md: 10 }, pb: 4 }}>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, alignItems: 'center', gap: { xs: 6, md: 8 }, mb: { xs: 8, md: 10 } }}>
-            <Box sx={{ flex: 1, textAlign: { xs: 'center', md: 'left' } }}>
-              <Chip label="NUEVA PLATAFORMA" size="small" sx={{ mb: 2, bgcolor: 'rgba(99,202,172,0.15)', color: ACCENT, fontWeight: 'bold', border: `1px solid ${ACCENT}40` }} />
-              <Typography variant="h1" fontWeight="800" color="white" sx={{ fontSize: { xs: '2.2rem', md: '3.2rem' }, lineHeight: 1.2 }}>
-                Componentes de PC
-              </Typography>
-              <Typography variant="h1" fontWeight="800" sx={{ fontSize: { xs: '2.2rem', md: '3.2rem' }, lineHeight: 1.2, background: 'linear-gradient(90deg, #63CAAC, #4ADE80)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', mb: 3 }}>
-                Alto Rendimiento
-              </Typography>
-              <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.8)', maxWidth: 500, mb: 5, fontSize: '1.05rem', lineHeight: 1.7 }}>
-                Plataforma especializada que valida automáticamente la compatibilidad entre componentes, garantizando un inventario preciso y una experiencia de compra sin errores.
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: { xs: 'center', md: 'flex-start' } }}>
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button onClick={() => navigate('/register')} variant="contained" size="large" endIcon={<ArrowForwardIcon />}
-                    sx={{ borderRadius: 3, bgcolor: ACCENT, color: '#20232a', fontWeight: 'bold', px: 4, py: 1.5, textTransform: 'none', boxShadow: `0 0 15px ${ACCENT_GLOW}`, '&:hover': { bgcolor: ACCENT, boxShadow: `0 0 25px ${ACCENT_GLOW}` } }}>
-                    Comenzar ahora
-                  </Button>
-                </motion.div>
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button onClick={() => navigate('/login')} variant="outlined" size="large"
-                    sx={{ borderRadius: 3, color: 'white', borderColor: 'rgba(255,255,255,0.2)', px: 4, py: 1.5, textTransform: 'none', '&:hover': { borderColor: ACCENT, color: ACCENT, boxShadow: `0 0 15px ${ACCENT_GLOW}` } }}>
-                    Ya tengo cuenta
-                  </Button>
-                </motion.div>
-              </Box>
+      <Box sx={{ position: 'relative', zIndex: 1 }}>
+
+      {/* ===== NAV ===== */}
+      <Box sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, bgcolor: 'rgba(0,0,0,0.85)', backdropFilter: 'saturate(180%) blur(20px)', px: { xs: 2.5, md: 8 }, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${C.border}` }}>
+        <Typography onClick={() => navigate('/')} sx={{ fontWeight: 700, fontSize: '1rem', letterSpacing: 2.5, cursor: 'pointer', color: C.text, background: `linear-gradient(135deg, ${C.accent}, ${C.accent2})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>PC STORE</Typography>
+        <Box display="flex" gap={2} alignItems="center">
+          <Button onClick={() => navigate('/login')} sx={{ color: C.text3, textTransform: 'none', fontWeight: 500, fontSize: '0.85rem', '&:hover': { color: C.accent } }}>Ingresar</Button>
+          <Button onClick={() => navigate('/register')} sx={{ bgcolor: C.accent, color: '#fff', textTransform: 'none', fontWeight: 600, fontSize: '0.8rem', borderRadius: 1.5, px: 2.5, py: 0.8, '&:hover': { bgcolor: C.accentHover } }}>Registrarse</Button>
+        </Box>
+      </Box>
+
+      {/* ===== HERO ===== */}
+      <Box sx={{ position: 'relative', height: '100vh', overflow: 'hidden' }}>
+        <AnimatePresence mode="wait">
+          <motion.div key={slide} initial={{ opacity: 0, scale: 1.02 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 1.2, ease: 'easeInOut' }} style={{ position: 'absolute', inset: 0 }}>
+            <Box component="img" src={slides[slide].img} alt="" sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.25)' }} />
+            <Box sx={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg, #000 0%, transparent 50%)' }} />
+          </motion.div>
+        </AnimatePresence>
+
+        <IconButton onClick={() => setSlide(s => (s - 1 + slides.length) % slides.length)} sx={{ position: 'absolute', left: { xs: 8, md: 24 }, top: '50%', color: '#fff', opacity: 0.5, '&:hover': { opacity: 1 } }}><ArrowBackIosNewIcon /></IconButton>
+        <IconButton onClick={() => setSlide(s => (s + 1) % slides.length)} sx={{ position: 'absolute', right: { xs: 8, md: 24 }, top: '50%', color: '#fff', opacity: 0.5, '&:hover': { opacity: 1 } }}><ArrowForwardIosIcon /></IconButton>
+
+        <Container maxWidth="lg" sx={{ height: '100%', display: 'flex', alignItems: 'flex-end', pb: 16, position: 'relative', zIndex: 10 }}>
+          <motion.div key={`t-${slide}`} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }}>
+            <Typography sx={{ color: C.accent, fontWeight: 500, letterSpacing: 3, fontSize: '0.7rem', mb: 2 }}>{slides[slide].tag}</Typography>
+            <Typography variant="h1" fontWeight={600} sx={{ fontSize: { xs: '2.2rem', md: '4rem' }, letterSpacing: -1.5, color: C.text, mb: 2, lineHeight: 1.05 }}>{slides[slide].title}</Typography>
+            <Typography sx={{ color: C.text2, fontSize: { xs: '1rem', md: '1.3rem' }, mb: 6, maxWidth: 500, fontWeight: 300 }}>{slides[slide].desc}</Typography>
+            <Box display="flex" gap={2}>
+              <Button onClick={() => navigate('/productos')} size="large" sx={{ bgcolor: C.accent, color: '#fff', fontWeight: 600, px: 5, py: 1.8, fontSize: '1rem', textTransform: 'none', borderRadius: 1.5, '&:hover': { bgcolor: C.accentHover } }}>Explorar catálogo</Button>
+              <Button onClick={() => navigate('/register')} size="large" sx={{ color: C.text, border: '1px solid rgba(255,255,255,0.2)', fontWeight: 500, px: 4, py: 1.8, fontSize: '1rem', textTransform: 'none', borderRadius: 1.5, '&:hover': { border: `1px solid ${C.accent}`, color: C.accent } }}>Crear cuenta</Button>
             </Box>
-            <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
-              <Box sx={{ position: 'absolute', width: 320, height: 320, borderRadius: '50%', background: `radial-gradient(circle, ${ACCENT_GLOW} 0%, transparent 70%)`, filter: 'blur(40px)', zIndex: 0 }} />
-              <Box component="img" src={heroImage} alt="PC Gaming Setup"
-                sx={{ width: '100%', maxWidth: 450, height: 'auto', objectFit: 'contain', position: 'relative', zIndex: 1, filter: 'drop-shadow(0 10px 40px rgba(99,202,172,0.3))' }} />
-            </Box>
-          </Box>
-        </motion.div>
+          </motion.div>
+        </Container>
 
-        {/* STATS */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' }, gap: 3, mb: 10 }}>
-          {[{ value: '250+', label: 'Componentes en catálogo' }, { value: '99.9%', label: 'Precisión de compatibilidad' }, { value: '24/7', label: 'Disponibilidad del sistema' }].map((stat, i) => (
-            <motion.div key={stat.label} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 * i, duration: 0.4 }}>
-              <Box sx={{ textAlign: 'center', p: 3, borderRadius: 4, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <Typography variant="h3" fontWeight="bold" sx={{ color: ACCENT, mb: 0.5 }}>{stat.value}</Typography>
-                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)' }}>{stat.label}</Typography>
-              </Box>
-            </motion.div>
+        <Box sx={{ position: 'absolute', bottom: 40, right: { xs: 20, md: 60 }, display: 'flex', gap: 2, zIndex: 10 }}>
+          {slides.map((_, i) => (
+            <Box key={i} onClick={() => setSlide(i)} sx={{ width: slide === i ? 28 : 7, height: 7, borderRadius: 4, cursor: 'pointer', bgcolor: slide === i ? C.accent : 'rgba(255,255,255,0.3)', transition: 'all 0.6s' }} />
           ))}
         </Box>
-      </Container>
+      </Box>
 
-      {/* ============ ¿POR QUÉ ELEGIRNOS? ============ */}
-      <Box sx={{ py: 10, background: 'rgba(255,255,255,0.01)', borderTop: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-        <Container maxWidth="lg">
-          <Typography variant="h3" fontWeight="bold" color="white" textAlign="center" mb={1}>¿Por qué elegirnos?</Typography>
-          <Typography variant="body1" textAlign="center" sx={{ color: 'rgba(255,255,255,0.8)', mb: 6 }}>Tecnología de punta para garantizar tu mejor experiencia</Typography>
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 3 }}>
-            {[
-              { icon: <VerifiedIcon sx={{ fontSize: 36, color: ACCENT }} />, title: 'Validación Inteligente', desc: 'Nuestro sistema verifica automáticamente la compatibilidad entre cada componente que seleccionas.' },
-              { icon: <SecurityIcon sx={{ fontSize: 36, color: ACCENT }} />, title: 'Transacciones Seguras', desc: 'Control de concurrencia ACID para evitar errores de inventario y garantizar la integridad de tus compras.' },
-              { icon: <SpeedIcon sx={{ fontSize: 36, color: ACCENT }} />, title: 'API de Alto Rendimiento', desc: 'Backend con NestJS, PostgreSQL y MongoDB para respuestas en tiempo real y máxima escalabilidad.' },
-            ].map((f, i) => (
-              <motion.div key={i} {...fadeUp}>
-                <Card sx={{ height: '100%', borderRadius: 4, background: 'rgba(255,255,255,0.025)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.08)', transition: 'all 0.3s', '&:hover': { border: `1px solid ${ACCENT}`, boxShadow: `0 8px 30px ${ACCENT_GLOW}`, background: 'rgba(255,255,255,0.05)' } }}>
-                  <CardContent sx={{ p: 4, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <Box sx={{ p: 1.5, borderRadius: 3, bgcolor: 'rgba(99,202,172,0.1)', mb: 2.5 }}>{f.icon}</Box>
-                    <Typography variant="h6" fontWeight="bold" color="white" gutterBottom>{f.title}</Typography>
-                    <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)', lineHeight: 1.6 }}>{f.desc}</Typography>
-                  </CardContent>
-                </Card>
-              </motion.div>
+      {/* ===== CATEGORÍAS ===== */}
+      <Box sx={{ py: { xs: 10, md: 20 }, px: { xs: 2.5, md: 8 }, overflow: 'hidden' }}>
+        <Container maxWidth="lg" disableGutters>
+          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.6 }}>
+            <Typography sx={{ color: C.accent, fontWeight: 500, letterSpacing: 2.5, fontSize: '0.7rem', mb: 1.5 }}>CATEGORÍAS</Typography>
+            <Typography variant="h2" fontWeight={600} sx={{ fontSize: { xs: '2rem', md: '3.5rem' }, color: C.text, letterSpacing: -1.5, mb: 2 }}>Todo para tu PC.</Typography>
+            <Typography sx={{ color: C.text3, fontSize: '1.2rem', mb: 10, fontWeight: 300 }}>Explora nuestras categorías de componentes.</Typography>
+          </motion.div>
+
+          <Grid container spacing={3}>
+            {categories.map((cat, i) => (
+              <Grid item xs={12} sm={6} md={6} key={i}>
+                <motion.div initial={{ opacity: 0, y: 60, scale: 0.97 }} whileInView={{ opacity: 1, y: 0, scale: 1 }} viewport={{ once: true, margin: '-60px' }} transition={{ delay: i * 0.08, duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }} whileHover={{ scale: 1.01 }} onClick={() => navigate('/productos')} style={{ cursor: 'pointer', height: '100%' }}>
+                  <Card sx={{ height: '100%', borderRadius: 4, background: cat.gradient, border: `1px solid ${C.border}`, overflow: 'hidden', transition: 'all 0.4s', '&:hover': { border: `1px solid ${C.borderHover}`, boxShadow: '0 30px 60px rgba(0,0,0,0.6)' } }}>
+                    <CardContent sx={{ p: { xs: 3, md: 5 }, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <Box sx={{ width: 4, height: 60, borderRadius: 2, bgcolor: cat.color, flexShrink: 0 }} />
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="h5" fontWeight={600} sx={{ color: C.text, letterSpacing: -0.5, mb: 1, fontSize: '1.3rem' }}>{cat.title}</Typography>
+                        <Typography variant="body2" sx={{ color: C.text3, lineHeight: 1.6, fontWeight: 300, mb: 2 }}>{cat.desc}</Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, opacity: 0.6, transition: 'all 0.3s', '.MuiCard-root:hover &': { opacity: 1 } }}>
+                          <Typography sx={{ color: cat.color, fontWeight: 500, fontSize: '0.85rem' }}>Explorar</Typography>
+                          <ArrowForwardIcon sx={{ fontSize: 14, color: cat.color }} />
+                        </Box>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </Grid>
             ))}
-          </Box>
+          </Grid>
         </Container>
       </Box>
 
-      {/* ============ CÓMO FUNCIONA ============ */}
-      <Container maxWidth="lg" sx={{ py: 10 }}>
-        <Typography variant="h3" fontWeight="bold" color="white" textAlign="center" mb={1}>Cómo funciona</Typography>
-        <Typography variant="body1" textAlign="center" sx={{ color: 'rgba(255,255,255,0.8)', mb: 6 }}>Arma tu PC ideal en 4 simples pasos</Typography>
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 3 }}>
+      {/* ===== PRODUCTOS DESTACADOS ===== */}
+      <Box sx={{ bgcolor: '#030305', py: { xs: 10, md: 16 }, px: { xs: 2.5, md: 8 } }}>
+        <Container maxWidth="lg" disableGutters>
+          <Box display="flex" justifyContent="space-between" alignItems="flex-end" mb={8}>
+            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+              <Typography sx={{ color: C.accent, fontWeight: 500, letterSpacing: 2.5, fontSize: '0.7rem', mb: 1.5 }}>DESTACADOS</Typography>
+              <Typography variant="h2" fontWeight={600} sx={{ fontSize: { xs: '2rem', md: '3rem' }, color: C.text, letterSpacing: -1 }}>Lo más vendido.</Typography>
+            </motion.div>
+            <Button onClick={() => navigate('/productos')} sx={{ color: C.text3, textTransform: 'none', fontWeight: 500, '&:hover': { color: C.accent } }}>Ver catálogo <ArrowForwardIcon sx={{ ml: 0.5, fontSize: 16 }} /></Button>
+          </Box>
+          <Grid container spacing={2}>
+            {featured.map((p, i) => (
+              <Grid item xs={12} sm={6} md={3} key={p.id}>
+                <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ delay: i * 0.04, duration: 0.5 }} whileHover={{ y: -6 }} style={{ height: '100%' }}>
+                  <Card onClick={() => navigate(`/productos/${p.id}`)} sx={{ height: '100%', bgcolor: C.card, border: `1px solid ${C.border}`, borderRadius: 3, cursor: 'pointer', overflow: 'hidden', transition: 'all 0.3s', '&:hover': { border: `1px solid ${C.borderHover}`, bgcolor: C.cardHover } }}>
+                    <Box sx={{ height: 170, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#06060b', p: 2 }}>
+                      <CardMedia component="img" image={p.imageUrl} alt={p.name} sx={{ maxWidth: '80%', maxHeight: '80%', objectFit: 'contain' }} />
+                    </Box>
+                    <CardContent sx={{ p: 3 }}>
+                      <Typography sx={{ color: C.text3, fontSize: '0.7rem', mb: 1 }}>{p.category?.name}</Typography>
+                      <Typography fontWeight={600} sx={{ color: C.text, fontSize: '0.9rem', mb: 0.5 }} noWrap>{p.name}</Typography>
+                      <Box display="flex" justifyContent="space-between" alignItems="center" mt={1}>
+                        <Typography fontWeight={700} sx={{ color: C.accent, fontSize: '1.05rem' }}>${p.price.toFixed(2)}</Typography>
+                        <Button size="small" onClick={(e) => { e.stopPropagation(); addToCart(p, 1); toast.success('Agregado') }} sx={{ color: C.accent, textTransform: 'none', fontWeight: 500, fontSize: '0.8rem', minWidth: 'auto', '&:hover': { color: C.accentHover } }}>+ Agregar</Button>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+      </Box>
+
+      {/* ===== FAQ ===== */}
+      <Box sx={{ py: { xs: 10, md: 16 }, px: { xs: 2.5, md: 8 } }}>
+        <Container maxWidth="md" disableGutters>
+          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+            <Typography sx={{ color: C.accent, fontWeight: 500, letterSpacing: 2.5, fontSize: '0.7rem', mb: 1.5, textAlign: 'center' }}>FAQ</Typography>
+            <Typography variant="h2" fontWeight={600} sx={{ fontSize: { xs: '2rem', md: '3rem' }, color: C.text, letterSpacing: -1, textAlign: 'center', mb: 8 }}>Preguntas frecuentes.</Typography>
+          </motion.div>
           {[
-            { step: '01', title: 'Regístrate', desc: 'Crea tu cuenta gratuita en segundos y accede al catálogo completo.' },
-            { step: '02', title: 'Explora', desc: 'Navega por cientos de componentes con especificaciones detalladas por categoría.' },
-            { step: '03', title: 'Selecciona', desc: 'Elige tus componentes. El sistema valida la compatibilidad automáticamente.' },
-            { step: '04', title: 'Compra', desc: 'Realiza tu pedido de forma segura y recíbelo en la puerta de tu casa.' },
-          ].map((step, i) => (
-            <motion.div key={i} {...fadeUp} style={{ position: 'relative' }}>
-              <Card sx={{ height: '100%', borderRadius: 4, background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.08)', textAlign: 'center', p: 3 }}>
-                <Typography variant="h2" fontWeight="900" sx={{ color: ACCENT, opacity: 0.3, mb: 1, fontSize: '3rem' }}>{step.step}</Typography>
-                <Typography variant="h6" fontWeight="bold" color="white" gutterBottom>{step.title}</Typography>
-                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)', lineHeight: 1.6 }}>{step.desc}</Typography>
-              </Card>
-            </motion.div>
-          ))}
-        </Box>
-      </Container>
-
-      {/* ============ CATEGORÍAS POPULARES ============ */}
-      <Box sx={{ py: 10, background: 'rgba(255,255,255,0.01)', borderTop: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-        <Container maxWidth="lg">
-          <Typography variant="h3" fontWeight="bold" color="white" textAlign="center" mb={1}>Categorías populares</Typography>
-          <Typography variant="body1" textAlign="center" sx={{ color: 'rgba(255,255,255,0.8)', mb: 6 }}>Todo lo que necesitas para armar tu PC</Typography>
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' }, gap: 2 }}>
-            {[
-              { icon: <MemoryIcon sx={{ fontSize: 32, color: ACCENT }} />, label: 'Procesadores' },
-              { icon: <DeveloperBoardIcon sx={{ fontSize: 32, color: ACCENT }} />, label: 'Motherboards' },
-              { icon: <StorageIcon sx={{ fontSize: 32, color: ACCENT }} />, label: 'RAM / SSD' },
-              { icon: <PowerIcon sx={{ fontSize: 32, color: ACCENT }} />, label: 'Fuentes' },
-              { icon: <PrecisionManufacturingIcon sx={{ fontSize: 32, color: ACCENT }} />, label: 'GPUs' },
-              { icon: <MonitorIcon sx={{ fontSize: 32, color: ACCENT }} />, label: 'Monitores' },
-            ].map((cat, i) => (
-              <motion.div key={i} whileHover={{ y: -4 }} {...fadeUp}>
-                <Card sx={{ borderRadius: 4, background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)', textAlign: 'center', py: 3, cursor: 'pointer', transition: 'all 0.3s', '&:hover': { border: `1px solid ${ACCENT}`, boxShadow: `0 6px 20px ${ACCENT_GLOW}`, background: 'rgba(99,202,172,0.06)' } }}>
-                  <Box sx={{ mb: 1 }}>{cat.icon}</Box>
-                  <Typography variant="body2" fontWeight="bold" color="white">{cat.label}</Typography>
-                </Card>
-              </motion.div>
-            ))}
-          </Box>
-        </Container>
-      </Box>
-
-      {/* ============ VENTAJAS ============ */}
-      <Container maxWidth="lg" sx={{ py: 10 }}>
-        <Typography variant="h3" fontWeight="bold" color="white" textAlign="center" mb={6}>Lo que nos diferencia</Typography>
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 4 }}>
-          {[
-            { icon: <LocalShippingIcon sx={{ fontSize: 40, color: ACCENT }} />, title: 'Envíos a todo el país', desc: 'Entregamos en todo el territorio nacional con seguimiento en tiempo real de tu pedido.' },
-            { icon: <SupportAgentIcon sx={{ fontSize: 40, color: ACCENT }} />, title: 'Soporte técnico 24/7', desc: 'Nuestro equipo de expertos está disponible para ayudarte con cualquier duda o problema técnico.' },
-            { icon: <VerifiedIcon sx={{ fontSize: 40, color: ACCENT }} />, title: 'Garantía extendida', desc: 'Todos los componentes incluyen garantía del fabricante más nuestra garantía directa de 30 días.' },
-          ].map((v, i) => (
-            <motion.div key={i} {...fadeUp}>
-              <Box sx={{ textAlign: 'center', p: 4, borderRadius: 4, background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <Box sx={{ mb: 2 }}>{v.icon}</Box>
-                <Typography variant="h6" fontWeight="bold" color="white" gutterBottom>{v.title}</Typography>
-                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)', lineHeight: 1.6 }}>{v.desc}</Typography>
-              </Box>
-            </motion.div>
-          ))}
-        </Box>
-      </Container>
-
-      {/* ============ TESTIMONIOS ============ */}
-      <Box sx={{ py: 10, background: 'rgba(255,255,255,0.01)', borderTop: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-        <Container maxWidth="lg">
-          <Typography variant="h3" fontWeight="bold" color="white" textAlign="center" mb={1}>Lo que dicen nuestros clientes</Typography>
-          <Typography variant="body1" textAlign="center" sx={{ color: 'rgba(255,255,255,0.8)', mb: 6 }}>Miles de setups armados con éxito</Typography>
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 3 }}>
-            {[
-              { name: 'Carlos Méndez', role: 'Gamer Profesional', text: 'Excelente plataforma. La validación de compatibilidad me ahorró horas de investigación. Compré todos mis componentes en un solo lugar.', rating: 5 },
-              { name: 'Ana Torres', role: 'Diseñadora Gráfica', text: 'Necesitaba una workstation para renderizado 3D y el sistema me recomendó exactamente lo que necesitaba. Entrega rapidísima.', rating: 5 },
-              { name: 'Roberto Díaz', role: 'Ingeniero de Software', text: 'El control de inventario en tiempo real es impecable. Pude armar mi servidor de desarrollo sin preocuparme por la compatibilidad.', rating: 5 },
-            ].map((t, i) => (
-              <motion.div key={i} {...fadeUp}>
-                <Card sx={{ height: '100%', borderRadius: 4, background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.08)', p: 4 }}>
-                  <Box display="flex" gap={0.5} mb={2}>
-                    {[...Array(t.rating)].map((_, j) => <StarIcon key={j} sx={{ color: '#f59e0b', fontSize: 18 }} />)}
-                  </Box>
-                  <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', lineHeight: 1.7, mb: 3, fontStyle: 'italic' }}>"{t.text}"</Typography>
-                  <Divider sx={{ borderColor: 'rgba(255,255,255,0.06)', mb: 2 }} />
-                  <Typography variant="subtitle2" fontWeight="bold" color="white">{t.name}</Typography>
-                  <Typography variant="caption" sx={{ color: ACCENT }}>{t.role}</Typography>
-                </Card>
-              </motion.div>
-            ))}
-          </Box>
-        </Container>
-      </Box>
-
-      {/* ============ FAQ ============ */}
-      <Container maxWidth="md" sx={{ py: 10 }}>
-        <Typography variant="h3" fontWeight="bold" color="white" textAlign="center" mb={1}>Preguntas frecuentes</Typography>
-        <Typography variant="body1" textAlign="center" sx={{ color: 'rgba(255,255,255,0.8)', mb: 6 }}>Todo lo que necesitas saber</Typography>
-        {faqs.map((faq, i) => (
-          <motion.div key={i} {...fadeUp}>
-            <Accordion
-              expanded={expandedFaq === i}
-              onChange={() => setExpandedFaq(expandedFaq === i ? false : i)}
-              elevation={0}
-              sx={{
-                background: 'rgba(255,255,255,0.025)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: '12px !important',
-                mb: 1.5,
-                '&:before': { display: 'none' },
-                '&.Mui-expanded': { border: `1px solid ${ACCENT}40`, background: 'rgba(99,202,172,0.05)' },
-              }}>
-              <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: ACCENT }} />}
-                sx={{ '& .MuiAccordionSummary-content': { my: 1.5 } }}>
-                <Typography fontWeight="bold" color="white">{faq.q}</Typography>
+            { q: '¿Cómo funciona la validación de compatibilidad?', a: 'El sistema cruza especificaciones como socket, tipo de RAM y consumo para garantizar 100% de compatibilidad entre componentes.' },
+            { q: '¿Cuánto tardan los envíos?', a: '24-48h en ciudad, 3-5 días hábiles nacional. Seguimiento en tiempo real.' },
+            { q: '¿Ofrecen garantía?', a: 'Garantía del fabricante + 30 días de garantía directa PC Store.' },
+          ].map((faq, i) => (
+            <Accordion key={i} expanded={faqOpen === i} onChange={() => setFaqOpen(faqOpen === i ? false : i)} elevation={0}
+              sx={{ bgcolor: C.card, border: `1px solid ${C.border}`, borderRadius: '10px !important', mb: 1.5, overflow: 'hidden', '&:before': { display: 'none' }, '&.Mui-expanded': { border: `1px solid ${C.borderHover}` } }}>
+              <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: C.accent }} />} sx={{ px: 3, '& .MuiAccordionSummary-content': { my: 1.5 } }}>
+                <Typography fontWeight={500} sx={{ color: C.text, fontSize: '0.95rem' }}>{faq.q}</Typography>
               </AccordionSummary>
-              <AccordionDetails>
-                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)', lineHeight: 1.7 }}>{faq.a}</Typography>
+              <AccordionDetails sx={{ px: 3, pb: 3 }}>
+                <Typography sx={{ color: C.text3, lineHeight: 1.8, fontSize: '0.9rem' }}>{faq.a}</Typography>
               </AccordionDetails>
             </Accordion>
-          </motion.div>
-        ))}
-      </Container>
-
-      {/* ============ CONTACTO ============ */}
-      <Box sx={{ py: 10, background: 'rgba(255,255,255,0.01)', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-        <Container maxWidth="lg">
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 4 }}>
-            {[
-              { icon: <EmailIcon sx={{ color: ACCENT, fontSize: 32 }} />, title: 'Email', info: 'contacto@pcstore.com', desc: 'Respondemos en menos de 2 horas' },
-              { icon: <PhoneIcon sx={{ color: ACCENT, fontSize: 32 }} />, title: 'Teléfono', info: '+593 99 123 4567', desc: 'Lun - Vie 9:00 - 18:00' },
-              { icon: <LocationOnIcon sx={{ color: ACCENT, fontSize: 32 }} />, title: 'Oficina', info: 'Escuela de Tecnologías UTE', desc: 'Quito, Ecuador' },
-            ].map((c, i) => (
-              <motion.div key={i} {...fadeUp}>
-                <Card sx={{ borderRadius: 4, background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.08)', p: 4, textAlign: 'center' }}>
-                  <Box sx={{ mb: 2 }}>{c.icon}</Box>
-                  <Typography variant="h6" fontWeight="bold" color="white">{c.title}</Typography>
-                  <Typography variant="body1" sx={{ color: ACCENT, fontWeight: 600, my: 1 }}>{c.info}</Typography>
-                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)' }}>{c.desc}</Typography>
-                </Card>
-              </motion.div>
-            ))}
-          </Box>
+          ))}
         </Container>
       </Box>
 
-      {/* ============ ULTIMA CTA ============ */}
-      <Container maxWidth="lg" sx={{ py: 10 }}>
-        <Box sx={{ textAlign: 'center', py: 8, px: 3, borderRadius: 5, background: `linear-gradient(135deg, rgba(99,202,172,0.08), rgba(99,202,172,0.02))`, border: '1px solid rgba(99,202,172,0.15)' }}>
-          <Typography variant="h3" fontWeight="bold" color="white" mb={2}>¿Listo para armar tu PC ideal?</Typography>
-          <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.8)', mb: 4, maxWidth: 500, mx: 'auto' }}>
-            Regístrate ahora y explora nuestro catálogo completo de componentes verificados.
-          </Typography>
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} style={{ display: 'inline-block' }}>
-            <Button onClick={() => navigate('/register')} variant="contained" size="large" endIcon={<ArrowForwardIcon />}
-              sx={{ borderRadius: 3, bgcolor: ACCENT, color: '#20232a', fontWeight: 'bold', px: 5, py: 1.5, textTransform: 'none', boxShadow: `0 0 20px ${ACCENT_GLOW}`, '&:hover': { bgcolor: ACCENT, boxShadow: `0 0 30px ${ACCENT_GLOW}` } }}>
-              Crear cuenta gratis
-            </Button>
-          </motion.div>
-        </Box>
-      </Container>
+      {/* ===== CTA ===== */}
+      <Box sx={{ bgcolor: '#030305', borderTop: `1px solid ${C.border}`, py: 20, textAlign: 'center', px: 2.5 }}>
+        <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+          <Typography variant="h2" fontWeight={600} sx={{ fontSize: { xs: '2rem', md: '3.5rem' }, color: C.text, letterSpacing: -1, mb: 3 }}>¿Listo para armar tu PC?</Typography>
+          <Typography sx={{ color: C.text3, fontSize: '1.1rem', mb: 6, maxWidth: 400, mx: 'auto', fontWeight: 300 }}>Explora cientos de componentes verificados.</Typography>
+          <Button onClick={() => navigate('/register')} size="large" sx={{ bgcolor: C.accent, color: '#fff', fontWeight: 600, px: 8, py: 2.5, fontSize: '1.1rem', textTransform: 'none', borderRadius: 1.5, '&:hover': { bgcolor: C.accentHover } }}>Crear cuenta gratis</Button>
+        </motion.div>
+      </Box>
 
-      {/* ============ FOOTER ============ */}
-      <Box sx={{ borderTop: '1px solid rgba(255,255,255,0.06)', py: 4 }}>
-        <Container maxWidth="lg">
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 4, mb: 4 }}>
-            <Box>
-              <Box display="flex" alignItems="center" gap={1} mb={2}>
-                <ComputerIcon sx={{ color: ACCENT }} /><Typography fontWeight="bold" color="white">PC Store</Typography>
-              </Box>
-              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>
-                Plataforma especializada en venta de componentes de PC con validación inteligente de compatibilidad.
-              </Typography>
-            </Box>
-            <Box>
-              <Typography fontWeight="bold" color="white" mb={2}>Enlaces rápidos</Typography>
-              <Box display="flex" flexDirection="column" gap={1}>
-                {['Inicio', 'Catálogo', 'Iniciar sesión', 'Registrarse'].map(link => (
-                  <Typography key={link} variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', cursor: 'pointer', '&:hover': { color: ACCENT } }}>{link}</Typography>
-                ))}
-              </Box>
-            </Box>
-            <Box>
-              <Typography fontWeight="bold" color="white" mb={2}>Categorías</Typography>
-              <Box display="flex" flexDirection="column" gap={1}>
-                {['Procesadores', 'Motherboards', 'Memoria RAM', 'Almacenamiento', 'Tarjetas gráficas'].map(cat => (
-                  <Typography key={cat} variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', cursor: 'pointer', '&:hover': { color: ACCENT } }}>{cat}</Typography>
-                ))}
-              </Box>
-            </Box>
-          </Box>
-          <Divider sx={{ borderColor: 'rgba(255,255,255,0.06)', mb: 3 }} />
-          <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
-            <ComputerIcon sx={{ color: ACCENT, fontSize: 16, opacity: 0.6 }} />
-            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.85rem' }}>
-              © 2026 PC Store — Escuela de Tecnologías UTE · Todos los derechos reservados
-            </Typography>
-          </Box>
+      {/* ===== FOOTER ===== */}
+      <Box sx={{ bgcolor: '#000', borderTop: `1px solid ${C.border}`, py: 10, px: { xs: 2.5, md: 8 } }}>
+        <Container maxWidth="lg" disableGutters>
+          <Grid container spacing={6}>
+            <Grid item xs={12} md={5}>
+              <Typography fontWeight={700} sx={{ background: `linear-gradient(135deg, ${C.accent}, ${C.accent2})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: 2, mb: 2, fontSize: '1rem' }}>PC STORE</Typography>
+              <Typography variant="body2" sx={{ color: C.text3, lineHeight: 1.8, maxWidth: 280 }}>Plataforma de componentes de PC con validación inteligente de compatibilidad.</Typography>
+            </Grid>
+            <Grid item xs={6} md={3}>
+              <Typography fontWeight={600} sx={{ color: C.text, mb: 2, fontSize: '0.85rem' }}>Enlaces</Typography>
+              {['Catálogo', 'Ingresar', 'Registrarse'].map(l => (
+                <Typography key={l} variant="body2" sx={{ color: C.text3, mb: 1.5, cursor: 'pointer', fontSize: '0.85rem', '&:hover': { color: C.accent } }}>{l}</Typography>
+              ))}
+            </Grid>
+            <Grid item xs={6} md={4}>
+              <Typography fontWeight={600} sx={{ color: C.text, mb: 2, fontSize: '0.85rem' }}>Contacto</Typography>
+              <Typography variant="body2" sx={{ color: C.text3, mb: 1, fontSize: '0.85rem' }}>contacto@pcstore.com</Typography>
+              <Typography variant="body2" sx={{ color: C.text3, mb: 1, fontSize: '0.85rem' }}>+593 99 123 4567</Typography>
+              <Typography variant="body2" sx={{ color: C.text3, fontSize: '0.85rem' }}>UTE, Quito — Ecuador</Typography>
+            </Grid>
+          </Grid>
+          <Divider sx={{ borderColor: C.border, my: 6 }} />
+          <Typography textAlign="center" variant="body2" sx={{ color: '#555', fontSize: '0.75rem' }}>© 2026 PC Store — Escuela de Tecnologías UTE</Typography>
         </Container>
+      </Box>
+
       </Box>
     </Box>
   )
