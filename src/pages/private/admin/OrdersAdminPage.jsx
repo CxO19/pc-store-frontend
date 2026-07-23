@@ -1,194 +1,92 @@
-import { useEffect, useMemo, useState } from 'react'
-import {
-  Box, Typography, Button, Chip, Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, IconButton, Tooltip
-} from '@mui/material'
-import AddIcon from '@mui/icons-material/Add'
-import EditIcon from '@mui/icons-material/Edit'
-import BlockIcon from '@mui/icons-material/Block'
+import { useEffect, useState } from 'react'
+import { Box, Typography, Chip, CircularProgress } from '@mui/material'
 import toast from 'react-hot-toast'
 import api from '../../../api/axios'
 import DataTable from '../../../components/admin/DataTable'
-import ConfirmDialog from '../../../components/admin/ConfirmDialog'
 import { useThemeMode } from '../../../theme/ThemeModeContext'
-import { fieldSx, primaryBtnSx } from '../../../theme/adminStyles'
 
-const EMPTY_FORM = { name: '', description: '' }
+const STATUS_OPTIONS = ['Todos', 'pending', 'confirmed', 'shipped', 'delivered', 'cancelled']
 
-export default function CategoriesPage() {
+const statusLabels = {
+  pending: 'Pendiente',
+  confirmed: 'Confirmada',
+  shipped: 'Enviada',
+  delivered: 'Entregada',
+  cancelled: 'Cancelada',
+}
+
+const statusColors = {
+  pending: 'warning',
+  confirmed: 'info',
+  shipped: 'primary',
+  delivered: 'success',
+  cancelled: 'error',
+}
+
+export default function OrdersAdminPage() {
   const { palette } = useThemeMode()
   const isLight = palette.mode === 'light'
-
-  // Colores seguros y explícitos para mantener coherencia con el resto del panel
   const textColor = isLight ? '#1a1a1a' : '#ffffff'
-  const textMuted = isLight ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.7)'
 
   const [rows, setRows] = useState([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
-  const [sortBy, setSortBy] = useState('name')
-  const [sortOrder, setSortOrder] = useState('asc')
   const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('Todos')
+  const [sortBy, setSortBy] = useState('createdAt')
+  const [sortOrder, setSortOrder] = useState('desc')
 
-  const [formOpen, setFormOpen] = useState(false)
-  const [editingId, setEditingId] = useState(null)
-  const [form, setForm] = useState(EMPTY_FORM)
-  const [formErrors, setFormErrors] = useState({})
-  const [saving, setSaving] = useState(false)
+  const fetchOrders = () => {
+    setLoading(true)
+    const params = { page, limit, sortBy, sortOrder }
+    if (search) params.search = search
+    if (statusFilter !== 'Todos') params.status = statusFilter
 
-  const [confirmTarget, setConfirmTarget] = useState(null)
-  const [deactivating, setDeactivating] = useState(false)
-  const [refreshKey, setRefreshKey] = useState(0)
-
-  // Configuración unificada para los menús desplegables o popups para que combinen con la temática oscura/clara
-  const menuPropsConfig = {
-    PaperProps: {
-      sx: {
-        bgcolor: palette.paperBg || (isLight ? '#ffffff' : '#1e2130'),
-        border: `1px solid ${palette.paperBorder || (isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.1)')}`,
-        backgroundImage: 'none',
-        '& .MuiMenuItem-root': {
-          color: textColor,
-          fontSize: '0.9rem',
-          '&:hover': { bgcolor: `${palette.accent || '#63CAAC'}20` },
-          '&.Mui-selected': { bgcolor: `${palette.accent || '#63CAAC'}30`, color: palette.accent || '#63CAAC' },
-        },
-      },
-    },
-  }
-
-  useEffect(() => {
-    const timer = setTimeout(() => setPage(1), 0)
-    return () => clearTimeout(timer)
-  }, [search])
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(true)
-      api.get('/categories', {
-        params: {
-          search: search || undefined,
-          page, limit, sort: sortBy, order: sortOrder,
-        },
+    api.get('/orders', { params })
+      .then(res => {
+        setRows(res.data.data || res.data || [])
+        setTotal(res.data.total || res.data.data?.length || 0)
       })
-        .then(({ data }) => {
-          setRows(data.data || [])
-          setTotal(data.total || 0)
-        })
-        .catch(() => toast.error('No se pudieron cargar las categorías'))
-        .finally(() => setLoading(false))
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [search, page, limit, sortBy, sortOrder, refreshKey])
-
-  const columns = useMemo(() => [
-    { key: 'name', label: 'Nombre', sortable: true },
-    { key: 'description', label: 'Descripción', render: (row) => row.description || '—' },
-    {
-      key: 'isActive',
-      label: 'Estado',
-      render: (row) => (
-        <Chip
-          size="small"
-          label={row.isActive !== false ? 'Activo' : 'Inactivo'}
-          sx={{
-            bgcolor: row.isActive !== false ? palette.successBg : palette.dangerBg,
-            color: row.isActive !== false ? palette.success : palette.danger,
-            border: `1px solid ${row.isActive !== false ? palette.successBorder : palette.dangerBorder}`,
-            fontWeight: 'bold',
-          }}
-        />
-      ),
-    },
-  ], [palette])
-
-  const handleSort = (key) => {
-    if (sortBy === key) setSortOrder((o) => (o === 'asc' ? 'desc' : 'asc'))
-    else { setSortBy(key); setSortOrder('asc') }
+      .catch(() => toast.error('Error al cargar órdenes'))
+      .finally(() => setLoading(false))
   }
 
-  const openCreate = () => {
-    setEditingId(null)
-    setForm(EMPTY_FORM)
-    setFormErrors({})
-    setFormOpen(true)
-  }
+  useEffect(() => { fetchOrders() }, [page, limit, sortBy, sortOrder, statusFilter])
 
-  const openEdit = (row) => {
-    setEditingId(row.id)
-    setForm({
-      name: row.name || '',
-      description: row.description || '',
-    })
-    setFormErrors({})
-    setFormOpen(true)
-  }
-
-  const validate = () => {
-    const errors = {}
-    if (!form.name.trim()) errors.name = 'El nombre es obligatorio'
-    setFormErrors(errors)
-    return Object.keys(errors).length === 0
-  }
-
-  const handleSave = async () => {
-    if (!validate()) return
-    setSaving(true)
-    const payload = {
-      name: form.name.trim(),
-      description: form.description.trim() || undefined,
-    }
-    try {
-      if (editingId) {
-        await api.patch(`/categories/${editingId}`, payload)
-        toast.success('Categoría actualizada')
-      } else {
-        await api.post('/categories', payload)
-        toast.success('Categoría creada')
-      }
-      setFormOpen(false)
-      setRefreshKey((k) => k + 1)
-    } catch (err) {
-      const msg = err.response?.data?.message || 'No se pudo guardar la categoría'
-      toast.error(Array.isArray(msg) ? msg[0] : msg)
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleDeactivate = async () => {
-    if (!confirmTarget) return
-    setDeactivating(true)
-    try {
-      await api.delete(`/categories/${confirmTarget.id}`)
-      toast.success('Categoría desactivada')
-      setConfirmTarget(null)
-      setRows((prev) => prev.filter((r) => r.id !== confirmTarget.id))
-      setTotal((t) => Math.max(0, t - 1))
-    } catch (err) {
-      const msg = err.response?.data?.message || 'No se pudo desactivar la categoría'
-      toast.error(Array.isArray(msg) ? msg[0] : msg)
-    } finally {
-      setDeactivating(false)
-    }
-  }
+  const columns = [
+    { id: 'id', label: 'ID Orden', sortable: true, render: (row) => `#${row.id?.slice(0, 8) || '—'}` },
+    { id: 'user', label: 'Cliente', sortable: false, render: (row) => row.user?.firstName || row.user?.email || row.userId?.slice(0, 8) || 'Cliente' },
+    { id: 'total', label: 'Total', sortable: true, render: (row) => `$${Number(row.total || 0).toFixed(2)}`, align: 'right' },
+    { id: 'status', label: 'Estado', sortable: true, render: (row) => (
+      <Chip label={statusLabels[row.status] || row.status} color={statusColors[row.status] || 'default'} size="small" sx={{ fontWeight: 600 }} />
+    )},
+    { id: 'createdAt', label: 'Fecha', sortable: true, render: (row) => row.createdAt ? new Date(row.createdAt).toLocaleDateString('es-EC') : '—' },
+  ]
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
-        <Box>
-          <Typography variant="h4" fontWeight="bold" sx={{ color: textColor, textShadow: palette.mode === 'dark' ? `0 0 30px ${palette.accentGlow}` : 'none' }} mb={0.5}>
-            Gestión de Categorías
-          </Typography>
-          <Typography sx={{ color: textMuted }}>
-            {total} categoría{total === 1 ? '' : 's'} registrada{total === 1 ? '' : 's'}
-          </Typography>
-        </Box>
-        <Button startIcon={<AddIcon />} onClick={openCreate} variant="contained" sx={primaryBtnSx(palette)}>
-          Nueva categoría
-        </Button>
+    <Box sx={{ width: '100%', p: { xs: 2, md: 3 }, boxSizing: 'border-box' }}>
+      <Typography variant="h4" fontWeight={800} sx={{ color: textColor, mb: 1 }}>Gestión de Órdenes</Typography>
+      <Typography variant="body1" sx={{ color: isLight ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.7)', mb: 3 }}>
+        Visualiza y administra todas las órdenes del sistema
+      </Typography>
+
+      {/* Filtro por estado */}
+      <Box display="flex" gap={1} flexWrap="wrap" mb={3}>
+        {STATUS_OPTIONS.map(s => (
+          <Chip key={s} label={s === 'Todos' ? 'Todos' : statusLabels[s] || s}
+            onClick={() => { setStatusFilter(s); setPage(1) }}
+            sx={{
+              bgcolor: statusFilter === s ? palette.accent : (isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.05)'),
+              color: statusFilter === s ? '#1a1a1a' : textColor,
+              fontWeight: 'bold',
+              border: `1px solid ${statusFilter === s ? palette.accent : palette.paperBorder}`,
+              cursor: 'pointer',
+              '&:hover': { bgcolor: statusFilter === s ? palette.accent : `${palette.accent}30` }
+            }}
+          />
+        ))}
       </Box>
 
       <DataTable
@@ -202,77 +100,10 @@ export default function CategoriesPage() {
         onLimitChange={(l) => { setLimit(l); setPage(1) }}
         sortBy={sortBy}
         sortOrder={sortOrder}
-        onSortChange={handleSort}
+        onSortChange={(col, dir) => { setSortBy(col); setSortOrder(dir) }}
         search={search}
-        onSearchChange={setSearch}
-        emptyMessage="No hay categorías que coincidan con la búsqueda"
-        renderActions={(row) => (
-          <>
-            <Tooltip title="Editar">
-              <IconButton size="small" onClick={() => openEdit(row)} sx={{ color: palette.accent }}>
-                <EditIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title={row.isActive !== false ? 'Desactivar' : 'Ya está inactiva'}>
-              <span>
-                <IconButton
-                  size="small"
-                  disabled={row.isActive === false}
-                  onClick={() => setConfirmTarget(row)}
-                  sx={{ color: palette.danger }}
-                >
-                  <BlockIcon fontSize="small" />
-                </IconButton>
-              </span>
-            </Tooltip>
-          </>
-        )}
-      />
-
-      <Dialog
-        open={formOpen}
-        onClose={() => !saving && setFormOpen(false)}
-        maxWidth="sm"
-        fullWidth
-        slotProps={{ paper: { sx: { background: palette.paperBg, backdropFilter: 'blur(16px)', borderRadius: 4, border: `1px solid ${palette.paperBorder}` } } }}
-      >
-        <DialogTitle sx={{ color: textColor, fontWeight: 'bold' }}>
-          {editingId ? 'Editar categoría' : 'Nueva categoría'}
-        </DialogTitle>
-        <DialogContent>
-          <Box display="flex" flexDirection="column" gap={2} sx={{ mt: 1 }}>
-            <TextField
-              fullWidth label="Nombre" value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              error={!!formErrors.name} helperText={formErrors.name}
-              sx={fieldSx(palette)}
-            />
-            <TextField
-              fullWidth multiline minRows={2} label="Descripción" value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              sx={fieldSx(palette)}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={() => setFormOpen(false)} disabled={saving} sx={{ color: textMuted }}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSave} disabled={saving} variant="contained" sx={primaryBtnSx(palette)}>
-            {saving ? 'Guardando...' : 'Guardar'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <ConfirmDialog
-        open={!!confirmTarget}
-        title="Desactivar categoría"
-        message={`¿Seguro que querés desactivar "${confirmTarget?.name}"?`}
-        confirmLabel="Desactivar"
-        danger
-        loading={deactivating}
-        onConfirm={handleDeactivate}
-        onClose={() => setConfirmTarget(null)}
+        onSearchChange={(s) => { setSearch(s); setPage(1) }}
+        emptyMessage="No se encontraron órdenes"
       />
     </Box>
   )

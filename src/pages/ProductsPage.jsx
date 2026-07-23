@@ -1,253 +1,190 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
-  Box, Typography, Grid, Card, CardContent, CardMedia,
-  Chip, Button, CircularProgress, TextField, InputAdornment, Container
+  Box, Typography, Grid, Card, CardMedia, Chip,
+  Button, CircularProgress, Container
 } from '@mui/material'
-import SearchIcon from '@mui/icons-material/Search'
-import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined'
-import FilterListIcon from '@mui/icons-material/FilterList'
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import { motion } from 'framer-motion'
+import toast from 'react-hot-toast'
 import { useProducts } from '../hooks/useProducts'
-import { useThemeMode } from '../theme/ThemeModeContext'
+import { useCart } from '../contexts/CartContext'
 
-const ACCENT = '#63CAAC'
-const ACCENT_GLOW = 'rgba(99, 202, 172, 0.4)'
+const fadeUp = {
+  hidden: { opacity: 0, y: 40 },
+  visible: i => ({ opacity: 1, y: 0, transition: { delay: i * 0.05, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] } })
+}
+
+const C = {
+  accent: '#00e5a0',
+  accentHover: '#00c48c',
+  text: '#ffffff',
+  text2: '#c5cad3',
+  text3: '#888888',
+  card: '#0a0a0f',
+  border: 'rgba(0,229,160,0.08)',
+}
 
 export default function ProductsPage() {
   const { products, loading } = useProducts()
-  const { palette } = useThemeMode()
-  const isLight = palette.mode === 'light'
-
-  const textColor = isLight ? '#1a1a1a' : '#ffffff'
-  const textMuted = isLight ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.7)'
-
-  const [search, setSearch] = useState('')
+  const { addToCart } = useCart()
+  const navigate = useNavigate()
   const [selectedCategory, setSelectedCategory] = useState('ALL')
 
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase()) ||
-                          (product.description && product.description.toLowerCase().includes(search.toLowerCase()))
-    const matchesCategory = selectedCategory === 'ALL' || product.category?.name === selectedCategory
-    return matchesSearch && matchesCategory
-  })
-
-  const categories = ['ALL', ...new Set(products.map(p => p.category?.name).filter(Boolean))]
+  const cats = ['ALL', ...new Set(products.map(p => p.category?.name).filter(Boolean))]
+  const filtered = products.filter(p =>
+    selectedCategory === 'ALL' || p.category?.name === selectedCategory
+  )
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <Box sx={{ bgcolor: '#000', minHeight: '100vh', pb: 12, position: 'relative', overflow: 'hidden' }}>
       
-      {/* Encabezado Centrado */}
-      <Box sx={{ mb: 5, textAlign: 'center', width: '100%', maxWidth: 700 }}>
-        <motion.div initial={{ opacity: 0, y: -15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-          <Box display="flex" justifyContent="center" alignItems="center" gap={1.5} mb={1}>
-            <StorefrontOutlinedIcon sx={{ color: ACCENT, fontSize: 36 }} />
-            <Typography variant="h3" fontWeight="bold" sx={{ color: textColor, letterSpacing: '-0.5px' }}>
-              Catálogo de Componentes
-            </Typography>
-          </Box>
-          <Typography variant="body1" sx={{ color: textMuted }}>
-            Explorá el stock en tiempo real, encontrá los mejores componentes para tu setup y armá tu equipo de alto rendimiento.
+      {/* ===== FONDO ANIMADO ===== */}
+      <Box sx={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
+        {/* Grid de puntos */}
+        <Box sx={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px)',
+          backgroundSize: '50px 50px',
+          opacity: 0.5,
+        }} />
+        {/* Gradientes flotantes */}
+        <Box sx={{
+          position: 'absolute', top: '-20%', right: '-10%',
+          width: '50%', height: '60%',
+          background: 'radial-gradient(ellipse, rgba(255,255,255,0.02) 0%, transparent 70%)',
+          filter: 'blur(60px)',
+          animation: 'float1 15s ease-in-out infinite',
+          '@keyframes float1': {
+            '0%, 100%': { transform: 'translate(0, 0) rotate(0deg)' },
+            '33%': { transform: 'translate(30px, -30px) rotate(5deg)' },
+            '66%': { transform: 'translate(-20px, 20px) rotate(-3deg)' },
+          }
+        }} />
+        <Box sx={{
+          position: 'absolute', bottom: '-10%', left: '-10%',
+          width: '40%', height: '50%',
+          background: 'radial-gradient(ellipse, rgba(255,255,255,0.015) 0%, transparent 70%)',
+          filter: 'blur(60px)',
+          animation: 'float2 18s ease-in-out infinite',
+          '@keyframes float2': {
+            '0%, 100%': { transform: 'translate(0, 0) rotate(0deg)' },
+            '50%': { transform: 'translate(-40px, -20px) rotate(-5deg)' },
+          }
+        }} />
+      </Box>
+
+      <Box sx={{ position: 'relative', zIndex: 1 }}>
+      
+      {/* Header */}
+      <Box sx={{ textAlign: 'center', pt: { xs: 8, md: 14 }, pb: 10, px: 3 }}>
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
+          <Typography sx={{ color: '#888', fontWeight: 500, letterSpacing: 3, fontSize: '0.7rem', mb: 2 }}>
+            CATÁLOGO
+          </Typography>
+          <Typography variant="h1" fontWeight={600} sx={{ fontSize: { xs: '2.5rem', md: '4rem' }, color: '#fff', letterSpacing: -1.5, mb: 2, lineHeight: 1.05 }}>
+            Componentes.
+          </Typography>
+          <Typography sx={{ color: '#888', fontSize: '1.1rem', fontWeight: 300 }}>
+            Todo lo que necesitas para armar tu PC.
           </Typography>
         </motion.div>
       </Box>
 
-      {/* Bloque de Búsqueda y Filtros Centrado */}
-      <Box sx={{ width: '100%', maxWidth: 900, mb: 6, display: 'flex', flexDirection: 'column', gap: 3 }}>
-        
-        {/* Barra de Búsqueda Principal Centrada */}
-        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}>
-          <Card sx={{
-            borderRadius: 4,
-            backgroundColor: palette.paperBg,
-            backdropFilter: 'blur(16px)',
-            border: `1px solid ${palette.paperBorder}`,
-            p: 3,
-            boxShadow: isLight 
-              ? '0 10px 30px rgba(0, 0, 0, 0.08)' 
-              : '0 10px 30px -10px rgba(99, 202, 172, 0.15)',
-            backgroundImage: 'none',
-            backgroundImage: 'none',
-          }}>
-            <TextField
-              placeholder="Buscar componente por nombre o descripción..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              size="medium"
-              fullWidth
+      {/* Filtros */}
+      <Container maxWidth="lg" disableGutters sx={{ px: { xs: 3, md: 8 } }}>
+        <Box display="flex" gap={1} flexWrap="wrap" justifyContent="center" mb={10}>
+          {cats.map(cat => (
+            <Chip key={cat} label={cat === 'ALL' ? 'Todo' : cat}
+              onClick={() => setSelectedCategory(cat)}
               sx={{
-                '& .MuiOutlinedInput-root': {
-                  color: textColor,
-                  bgcolor: isLight ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.03)',
-                  borderRadius: 3,
-                  border: `1px solid ${palette.paperBorder}`,
-                  transition: 'all 0.3s',
-                  '& fieldset': { border: 'none' },
-                  '&:hover': { border: `1px solid ${ACCENT}50` },
-                  '&.Mui-focused': { border: `1px solid ${ACCENT}`, boxShadow: `0 0 15px ${ACCENT_GLOW}` },
-                },
-              }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon sx={{ color: textMuted }} />
-                  </InputAdornment>
-                ),
+                bgcolor: selectedCategory === cat ? C.accent : 'transparent',
+                color: selectedCategory === cat ? '#fff' : '#888',
+                fontWeight: 600, fontSize: '0.8rem', borderRadius: 1.5, px: 1,
+                border: `1px solid ${selectedCategory === cat ? C.accent : '#222'}`,
+                cursor: 'pointer', transition: 'all 0.2s',
+                '&:hover': { border: `1px solid ${C.accent}`, color: C.accent }
               }}
             />
-
-            {/* Categorías en forma de Píldoras Centradas */}
-            {categories.length > 1 && (
-              <Box display="flex" justifyContent="center" gap={1.5} flexWrap="wrap" mt={3}>
-                {categories.map((cat) => (
-                  <Chip
-                    key={cat}
-                    label={cat === 'ALL' ? 'Todos los componentes' : cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    sx={{
-                      bgcolor: selectedCategory === cat ? ACCENT : (isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.03)'),
-                      color: selectedCategory === cat ? '#1a1a1a' : textColor,
-                      fontWeight: 'bold',
-                      px: 1.5,
-                      py: 2,
-                      border: `1px solid ${selectedCategory === cat ? ACCENT : palette.paperBorder}`,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      '&:hover': {
-                        bgcolor: selectedCategory === cat ? ACCENT : `${ACCENT}20`,
-                      }
-                    }}
-                  />
-                ))}
-              </Box>
-            )}
-          </Card>
-        </motion.div>
-
-      </Box>
-
-      {/* Grid de Productos Centrado */}
-      {loading ? (
-        <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" mt={6} gap={2}>
-          <CircularProgress sx={{ color: ACCENT }} size={50} />
-          <Typography sx={{ color: textMuted }}>Cargando catálogo...</Typography>
+          ))}
         </Box>
-      ) : filteredProducts.length === 0 ? (
-        <Box
-          sx={{
-            textAlign: 'center',
-            py: 8,
-            px: 4,
-            width: '100%',
-            maxWidth: 600,
-            backgroundColor: palette.paperBg,
-            border: `1px solid ${palette.paperBorder}`,
-            borderRadius: 4,
-            boxShadow: isLight 
-              ? '0 10px 30px rgba(0, 0, 0, 0.08)' 
-              : '0 10px 30px -10px rgba(99, 202, 172, 0.15)',
-            backgroundImage: 'none',
-          }}
-        >
-          <Typography variant="h6" fontWeight="bold" sx={{ color: textColor, mb: 1 }}>
-            No se encontraron productos
-          </Typography>
-          <Typography variant="body2" sx={{ color: textMuted }}>
-            Intenta buscando con otro término o categoría.
-          </Typography>
+      </Container>
+
+      {/* Loading */}
+      {loading ? (
+        <Box textAlign="center" py={16}><CircularProgress sx={{ color: C.accent }} size={36} /></Box>
+      ) : filtered.length === 0 ? (
+        <Box textAlign="center" py={16}>
+          <Typography variant="h4" fontWeight={600} color="#fff" mb={1}>Sin productos</Typography>
+          <Typography color="#888">Selecciona otra categoría.</Typography>
         </Box>
       ) : (
-        <Grid container spacing={3} justifyContent="center" sx={{ width: '100%' }}>
-          {filteredProducts.map((product, index) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
-              <motion.div
-                initial={{ opacity: 0, y: 25 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05, duration: 0.3 }}
-                whileHover={{ y: -6 }}
-                style={{ height: '100%' }}
-              >
-                <Card sx={{
-                  height: '100%',
-                  borderRadius: 4,
-                  backgroundColor: palette.paperBg,
-                  backdropFilter: 'blur(10px)',
-                  border: `1px solid ${palette.paperBorder}`,
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  backgroundImage: 'none',
-                  boxShadow: isLight ? '0 10px 30px rgba(0,0,0,0.05)' : 'none',
-                  '&:hover': {
-                    border: `1px solid ${ACCENT}`,
-                    boxShadow: isLight ? '0 15px 35px rgba(99,202,172,0.15)' : `0 10px 30px -10px ${ACCENT_GLOW}`,
-                  }
-                }}>
-                  <Box sx={{ position: 'relative', overflow: 'hidden' }}>
-                    <CardMedia
-                      component="img"
-                      height="180"
-                      image={product.imageUrl || `https://placehold.co/300x180/121212/63CAAC?text=${encodeURIComponent(product.name)}`}
-                      alt={product.name}
-                      sx={{ objectFit: 'contain', bgcolor: isLight ? 'rgba(0,0,0,0.02)' : 'rgba(0,0,0,0.2)', p: 2, transition: 'transform 0.3s', '&:hover': { transform: 'scale(1.05)' } }}
-                    />
-                    {product.category && (
-                      <Chip
-                        label={product.category.name}
-                        size="small"
-                        sx={{
-                          position: 'absolute',
-                          top: 12,
-                          left: 12,
-                          bgcolor: isLight ? 'rgba(255,255,255,0.9)' : 'rgba(20,20,20,0.85)',
-                          backdropFilter: 'blur(8px)',
-                          color: ACCENT,
-                          fontWeight: 'bold',
-                          border: `1px solid ${ACCENT}50`,
-                        }}
-                      />
-                    )}
-                  </Box>
-
-                  <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 1.5, p: 2.5 }}>
-                    <Typography variant="h6" fontWeight="bold" sx={{ color: textColor }} noWrap title={product.name}>
-                      {product.name}
-                    </Typography>
-                    
-                    <Typography variant="body2" sx={{
-                      color: textMuted,
-                      overflow: 'hidden',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      minHeight: 40,
-                      flexGrow: 1,
-                      lineHeight: 1.4,
-                    }}>
-                      {product.description || 'Sin descripción disponible para este componente.'}
-                    </Typography>
-
-                    <Box display="flex" justifyContent="space-between" alignItems="center" mt={1}>
-                      <Typography variant="h5" fontWeight="bold" sx={{ color: ACCENT }}>
-                        ${Number(product.price).toFixed(2)}
-                      </Typography>
-                      <Chip
-                        label={product.stock > 0 ? `Stock: ${product.stock}` : 'Agotado'}
-                        size="small"
-                        sx={{
-                          bgcolor: product.stock > 0 ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-                          color: product.stock > 0 ? '#4ade80' : '#f87171',
-                          border: `1px solid ${product.stock > 0 ? '#4ade80' : '#f87171'}`,
-                          fontWeight: 'bold',
-                        }}
-                      />
+        /* Grid */
+        <Container maxWidth="lg" disableGutters sx={{ px: { xs: 3, md: 8 } }}>
+          <Grid container spacing={2.5}>
+            {filtered.map((product, i) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
+                <motion.div
+                  custom={i}
+                  initial="hidden"
+                  animate="visible"
+                  variants={fadeUp}
+                  whileHover={{ y: -6 }}
+                  style={{ height: '100%' }}
+                >
+                    <Card onClick={() => navigate(`/productos/${product.id}`)} sx={{
+                      height: '100%', bgcolor: C.card, borderRadius: 3, border: `1px solid ${C.border}`,
+                    cursor: 'pointer', overflow: 'hidden', display: 'flex', flexDirection: 'column',
+                    transition: 'all 0.3s ease', '&:hover': { border: '1px solid #333' }
+                  }}>
+                    {/* Imagen */}
+                    <Box sx={{ height: 200, bgcolor: '#0d0d0d', p: 3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <motion.div whileHover={{ scale: 1.06 }} transition={{ duration: 0.4 }}
+                        style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <CardMedia component="img"
+                          image={product.imageUrl || `https://placehold.co/300x200/0a0a0a/fff?text=Producto`}
+                          alt={product.name}
+                          sx={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                      </motion.div>
                     </Box>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </Grid>
-          ))}
-        </Grid>
+
+                    {/* Info */}
+                    <Box sx={{ p: 3, flex: 1, display: 'flex', flexDirection: 'column' }}>
+                      {product.category && (
+                        <Typography sx={{ color: '#555', fontSize: '0.65rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1.5, mb: 1 }}>
+                          {product.category.name}
+                        </Typography>
+                      )}
+                      <Typography fontWeight={600} sx={{ color: '#fff', fontSize: '0.95rem', mb: 1, letterSpacing: -0.2, lineHeight: 1.3 }} noWrap>
+                        {product.name}
+                      </Typography>
+                      
+                      <Box sx={{ mt: 'auto', pt: 2 }}>
+                        <Box display="flex" justifyContent="space-between" alignItems="center">
+                          <Typography fontWeight={700} sx={{ color: C.accent, fontSize: '1.05rem' }}>
+                            ${Number(product.price).toFixed(2)}
+                          </Typography>
+                          <Button size="small" disabled={product.stock === 0}
+                            onClick={(e) => { e.stopPropagation(); addToCart(product, 1); toast.success('Agregado') }}
+                            sx={{
+                              bgcolor: product.stock > 0 ? C.accent : 'transparent',
+                              color: product.stock > 0 ? '#fff' : '#555',
+                              textTransform: 'none', fontWeight: 600, fontSize: '0.7rem', borderRadius: 1, px: 2, minWidth: 'auto',
+                              '&:hover': { bgcolor: product.stock > 0 ? C.accentHover : 'transparent' }
+                            }}>
+                            {product.stock > 0 ? 'Agregar' : 'Agotado'}
+                          </Button>
+                        </Box>
+                      </Box>
+                    </Box>
+                  </Card>
+                </motion.div>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
       )}
-    </Container>
+      </Box>
+    </Box>
   )
 }
