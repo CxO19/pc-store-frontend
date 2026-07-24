@@ -4,10 +4,12 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
   Avatar, Button, TextField, Box, Typography,
-  Container, CssBaseline, Grid
+  Container, CssBaseline, Grid, Divider
 } from '@mui/material'
 import PersonAddIcon from '@mui/icons-material/PersonAdd'
+import GoogleIcon from '@mui/icons-material/Google'
 import { motion } from 'framer-motion'
+import { GoogleLogin } from '@react-oauth/google'
 import { useAuth } from '../contexts/AuthContext'
 import heroImage from '../assets/hero.png'
 
@@ -23,11 +25,17 @@ const registerSchema = z.object({
 })
 
 export default function RegisterPage() {
-  const { register: registerUser, loading } = useAuth()
+  const { register: registerUser, loginWithGoogle, loading } = useAuth()
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(registerSchema),
     defaultValues: { firstName: '', lastName: '', email: '', password: '' },
   })
+
+  const handleGoogleSuccess = (credentialResponse) => {
+    if (credentialResponse.credential) {
+      loginWithGoogle(credentialResponse.credential)
+    }
+  }
 
   return (
     <Box sx={{ minHeight: '100vh', width: '100vw', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
@@ -60,11 +68,28 @@ export default function RegisterPage() {
 
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
                     <Button type="submit" fullWidth disabled={loading}
-                      sx={{ mt: 3, mb: 1, borderRadius: 3, color: '#20232a', bgcolor: ACCENT, py: 1.5, fontSize: '1rem', fontWeight: 'bold', textTransform: 'none', boxShadow: `0 0 15px ${ACCENT_GLOW}`, '&:hover': { boxShadow: `0 0 25px ${ACCENT_GLOW}`, opacity: 0.9 }, '&:disabled': { color: 'rgba(255,255,255,0.3)', bgcolor: 'rgba(255,255,255,0.1)' } }}>
+                      sx={{ mt: 3, mb: 2, borderRadius: 3, color: '#20232a', bgcolor: ACCENT, py: 1.5, fontSize: '1rem', fontWeight: 'bold', textTransform: 'none', boxShadow: `0 0 15px ${ACCENT_GLOW}`, '&:hover': { boxShadow: `0 0 25px ${ACCENT_GLOW}`, opacity: 0.9 }, '&:disabled': { color: 'rgba(255,255,255,0.3)', bgcolor: 'rgba(255,255,255,0.1)' } }}>
                       {loading ? 'Creando cuenta...' : 'Registrarse'}
                     </Button>
                   </motion.div>
-                  <Typography variant="body2" textAlign="center" sx={{ color: 'rgba(255,255,255,0.7)', mt: 2 }}>
+
+                  <Divider sx={{ my: 2, borderColor: 'rgba(255,255,255,0.1)', '&::before, &::after': { borderColor: 'rgba(255,255,255,0.1)' } }}>
+                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>O continúa con</Typography>
+                  </Divider>
+
+                  <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', mt: 2 }}>
+                    <GoogleLogin
+                      onSuccess={handleGoogleSuccess}
+                      onError={() => console.log('Error al iniciar sesión con Google')}
+                      theme="filled_black"
+                      shape="pill"
+                      size="large"
+                      text="continue_with"
+                      width="100%"
+                    />
+                  </Box>
+
+                  <Typography variant="body2" textAlign="center" sx={{ color: 'rgba(255,255,255,0.7)', mt: 3 }}>
                     ¿Ya tienes cuenta?{' '}
                     <Link to="/login" style={{ color: ACCENT, fontWeight: 'bold' }}>Inicia sesión</Link>
                   </Typography>

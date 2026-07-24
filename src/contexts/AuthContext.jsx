@@ -76,6 +76,34 @@ export function AuthProvider({ children }) {
     }
   }, [navigate])
 
+  const loginWithGoogle = useCallback(async (googleToken) => {
+    setLoading(true)
+    try {
+      const res = await api.post('/auth/google', { token: googleToken })
+      const newToken = res.data.access_token
+      const payload = decodeJwt(newToken)
+      const newUser = {
+        id: payload?.sub,
+        email: payload?.email,
+        role: payload?.role,
+      }
+
+      localStorage.setItem('token', newToken)
+      localStorage.setItem('user', JSON.stringify(newUser))
+      setToken(newToken)
+      setUser(newUser)
+
+      toast.success('Bienvenido a PC Store')
+      navigate('/dashboard')
+      return true
+    } catch {
+      toast.error('Error al autenticar con Google')
+      return false
+    } finally {
+      setLoading(false)
+    }
+  }, [navigate])
+
   const logout = useCallback(() => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
@@ -97,8 +125,8 @@ export function AuthProvider({ children }) {
 
   const value = useMemo(() => ({
     token, user, isAuthenticated, isAdmin, loading,
-    login, register, logout, syncFromStorage,
-  }), [token, user, isAuthenticated, isAdmin, loading, login, register, logout, syncFromStorage])
+    login, register, loginWithGoogle, logout, syncFromStorage,
+  }), [token, user, isAuthenticated, isAdmin, loading, login, register, loginWithGoogle, logout, syncFromStorage])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
