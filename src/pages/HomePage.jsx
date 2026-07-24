@@ -70,7 +70,7 @@ export default function HomePage() {
       {/* ===== NAV ===== */}
       <Box sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, bgcolor: 'rgba(0,0,0,0.85)', backdropFilter: 'saturate(180%) blur(20px)', px: { xs: 2.5, md: 8 }, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${C.border}` }}>
         <Typography onClick={() => navigate('/')} sx={{ fontWeight: 700, fontSize: '1rem', letterSpacing: 2.5, cursor: 'pointer', color: C.text, background: `linear-gradient(135deg, ${C.accent}, ${C.accent2})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>PC STORE</Typography>
-        <Box display="flex" gap={2} alignItems="center">
+        <Box display="flex" gap={4} alignItems="center">
           <Button onClick={() => navigate('/login')} sx={{ color: C.text3, textTransform: 'none', fontWeight: 500, fontSize: '0.85rem', '&:hover': { color: C.accent } }}>Ingresar</Button>
           <Button onClick={() => navigate('/register')} sx={{ bgcolor: C.accent, color: '#fff', textTransform: 'none', fontWeight: 600, fontSize: '0.8rem', borderRadius: 1.5, px: 2.5, py: 0.8, '&:hover': { bgcolor: C.accentHover } }}>Registrarse</Button>
         </Box>
@@ -93,7 +93,7 @@ export default function HomePage() {
             <Typography sx={{ color: C.accent, fontWeight: 500, letterSpacing: 3, fontSize: '0.7rem', mb: 2 }}>{slides[slide].tag}</Typography>
             <Typography variant="h1" fontWeight={600} sx={{ fontSize: { xs: '2.2rem', md: '4rem' }, letterSpacing: -1.5, color: C.text, mb: 2, lineHeight: 1.05 }}>{slides[slide].title}</Typography>
             <Typography sx={{ color: C.text2, fontSize: { xs: '1rem', md: '1.3rem' }, mb: 6, maxWidth: 500, fontWeight: 300 }}>{slides[slide].desc}</Typography>
-            <Box display="flex" gap={2}>
+            <Box display="flex" gap={3}>
               <Button onClick={() => navigate('/productos')} size="large" sx={{ bgcolor: C.accent, color: '#fff', fontWeight: 600, px: 5, py: 1.8, fontSize: '1rem', textTransform: 'none', borderRadius: 1.5, '&:hover': { bgcolor: C.accentHover } }}>Explorar catálogo</Button>
               <Button onClick={() => navigate('/register')} size="large" sx={{ color: C.text, border: '1px solid rgba(255,255,255,0.2)', fontWeight: 500, px: 4, py: 1.8, fontSize: '1rem', textTransform: 'none', borderRadius: 1.5, '&:hover': { border: `1px solid ${C.accent}`, color: C.accent } }}>Crear cuenta</Button>
             </Box>
@@ -111,17 +111,19 @@ export default function HomePage() {
       <Box sx={{ py: { xs: 10, md: 20 }, px: { xs: 2.5, md: 8 }, overflow: 'hidden' }}>
         <Container maxWidth="lg" disableGutters>
           <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.6 }}>
-            <Typography sx={{ color: C.accent, fontWeight: 500, letterSpacing: 2.5, fontSize: '0.7rem', mb: 1.5 }}>CATEGORÍAS</Typography>
-            <Typography variant="h2" fontWeight={600} sx={{ fontSize: { xs: '2rem', md: '3.5rem' }, color: C.text, letterSpacing: -1.5, mb: 2 }}>Todo para tu PC.</Typography>
-            <Typography sx={{ color: C.text3, fontSize: '1.2rem', mb: 10, fontWeight: 300 }}>Explora nuestras categorías de componentes.</Typography>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography sx={{ color: C.accent, fontWeight: 500, letterSpacing: 2.5, fontSize: '0.7rem', mb: 1.5 }}>CATEGORÍAS</Typography>
+              <Typography variant="h2" fontWeight={600} sx={{ fontSize: { xs: '2rem', md: '3.5rem' }, color: C.text, letterSpacing: -1.5, mb: 2 }}>Todo para tu PC.</Typography>
+              <Typography sx={{ color: C.text3, fontSize: '1.2rem', mb: 10, fontWeight: 300 }}>Explora nuestras categorías de componentes.</Typography>
+            </Box>
           </motion.div>
 
-          <Grid container spacing={3}>
+          <Grid container spacing={3} justifyContent="center">
             {categories.map((cat, i) => (
-              <Grid item xs={12} sm={6} md={6} key={i}>
+              <Grid key={i} size={{ xs: 12, sm: 6, md: 6 }}>
                 <motion.div initial={{ opacity: 0, y: 60, scale: 0.97 }} whileInView={{ opacity: 1, y: 0, scale: 1 }} viewport={{ once: true, margin: '-60px' }} transition={{ delay: i * 0.08, duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }} whileHover={{ scale: 1.01 }} onClick={() => navigate('/productos')} style={{ cursor: 'pointer', height: '100%' }}>
-                  <Card sx={{ height: '100%', borderRadius: 4, background: cat.gradient, border: `1px solid ${C.border}`, overflow: 'hidden', transition: 'all 0.4s', '&:hover': { border: `1px solid ${C.borderHover}`, boxShadow: '0 30px 60px rgba(0,0,0,0.6)' } }}>
-                    <CardContent sx={{ p: { xs: 3, md: 5 }, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 4, background: cat.gradient, border: `1px solid ${C.border}`, overflow: 'hidden', transition: 'all 0.4s', '&:hover': { border: `1px solid ${C.borderHover}`, boxShadow: '0 30px 60px rgba(0,0,0,0.6)' } }}>
+                    <CardContent sx={{ p: { xs: 3, md: 5 }, display: 'flex', alignItems: 'center', gap: 4, flexGrow: 1 }}>
                       <Box sx={{ width: 4, height: 60, borderRadius: 2, bgcolor: cat.color, flexShrink: 0 }} />
                       <Box sx={{ flex: 1 }}>
                         <Typography variant="h5" fontWeight={600} sx={{ color: C.text, letterSpacing: -0.5, mb: 1, fontSize: '1.3rem' }}>{cat.title}</Typography>
@@ -143,24 +145,25 @@ export default function HomePage() {
       {/* ===== PRODUCTOS DESTACADOS ===== */}
       <Box sx={{ bgcolor: '#030305', py: { xs: 10, md: 16 }, px: { xs: 2.5, md: 8 } }}>
         <Container maxWidth="lg" disableGutters>
-          <Box display="flex" justifyContent="space-between" alignItems="flex-end" mb={8}>
+          <Box sx={{ textAlign: 'center', mb: 8 }}>
             <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
               <Typography sx={{ color: C.accent, fontWeight: 500, letterSpacing: 2.5, fontSize: '0.7rem', mb: 1.5 }}>DESTACADOS</Typography>
-              <Typography variant="h2" fontWeight={600} sx={{ fontSize: { xs: '2rem', md: '3rem' }, color: C.text, letterSpacing: -1 }}>Lo más vendido.</Typography>
+              <Typography variant="h2" fontWeight={600} sx={{ fontSize: { xs: '2rem', md: '3rem' }, color: C.text, letterSpacing: -1, mb: 2 }}>Lo más vendido.</Typography>
             </motion.div>
             <Button onClick={() => navigate('/productos')} sx={{ color: C.text3, textTransform: 'none', fontWeight: 500, '&:hover': { color: C.accent } }}>Ver catálogo <ArrowForwardIcon sx={{ ml: 0.5, fontSize: 16 }} /></Button>
           </Box>
-          <Grid container spacing={2}>
+          <Grid container spacing={2} justifyContent="center">
             {featured.map((p, i) => (
-              <Grid item xs={12} sm={6} md={3} key={p.id}>
+              <Grid key={p.id} size={{ xs: 12, sm: 6, md: 3 }}>
                 <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ delay: i * 0.04, duration: 0.5 }} whileHover={{ y: -6 }} style={{ height: '100%' }}>
-                  <Card onClick={() => navigate(`/productos/${p.id}`)} sx={{ height: '100%', bgcolor: C.card, border: `1px solid ${C.border}`, borderRadius: 3, cursor: 'pointer', overflow: 'hidden', transition: 'all 0.3s', '&:hover': { border: `1px solid ${C.borderHover}`, bgcolor: C.cardHover } }}>
+                  <Card onClick={() => navigate(`/productos/${p.id}`)} sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: C.card, border: `1px solid ${C.border}`, borderRadius: 3, cursor: 'pointer', overflow: 'hidden', transition: 'all 0.3s', '&:hover': { border: `1px solid ${C.borderHover}`, bgcolor: C.cardHover } }}>
                     <Box sx={{ height: 170, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#06060b', p: 2 }}>
                       <CardMedia component="img" image={p.imageUrl} alt={p.name} sx={{ maxWidth: '80%', maxHeight: '80%', objectFit: 'contain' }} />
                     </Box>
-                    <CardContent sx={{ p: 3 }}>
+                    <CardContent sx={{ p: 3, display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
                       <Typography sx={{ color: C.text3, fontSize: '0.7rem', mb: 1 }}>{p.category?.name}</Typography>
                       <Typography fontWeight={600} sx={{ color: C.text, fontSize: '0.9rem', mb: 0.5 }} noWrap>{p.name}</Typography>
+                      <Box sx={{ flexGrow: 1 }} />
                       <Box display="flex" justifyContent="space-between" alignItems="center" mt={1}>
                         <Typography fontWeight={700} sx={{ color: C.accent, fontSize: '1.05rem' }}>${p.price.toFixed(2)}</Typography>
                         <Button size="small" onClick={(e) => { e.stopPropagation(); addToCart(p, 1); toast.success('Agregado') }} sx={{ color: C.accent, textTransform: 'none', fontWeight: 500, fontSize: '0.8rem', minWidth: 'auto', '&:hover': { color: C.accentHover } }}>+ Agregar</Button>
@@ -188,11 +191,11 @@ export default function HomePage() {
           ].map((faq, i) => (
             <Accordion key={i} expanded={faqOpen === i} onChange={() => setFaqOpen(faqOpen === i ? false : i)} elevation={0}
               sx={{ bgcolor: C.card, border: `1px solid ${C.border}`, borderRadius: '10px !important', mb: 1.5, overflow: 'hidden', '&:before': { display: 'none' }, '&.Mui-expanded': { border: `1px solid ${C.borderHover}` } }}>
-              <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: C.accent }} />} sx={{ px: 3, '& .MuiAccordionSummary-content': { my: 1.5 } }}>
-                <Typography fontWeight={500} sx={{ color: C.text, fontSize: '0.95rem' }}>{faq.q}</Typography>
+              <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: C.accent }} />} sx={{ px: 3, '& .MuiAccordionSummary-content': { my: 1.5, justifyContent: 'center' } }}>
+                <Typography fontWeight={500} sx={{ color: C.text, fontSize: '0.95rem', textAlign: 'center' }}>{faq.q}</Typography>
               </AccordionSummary>
               <AccordionDetails sx={{ px: 3, pb: 3 }}>
-                <Typography sx={{ color: C.text3, lineHeight: 1.8, fontSize: '0.9rem' }}>{faq.a}</Typography>
+                <Typography sx={{ color: C.text3, lineHeight: 1.8, fontSize: '0.9rem', textAlign: 'center' }}>{faq.a}</Typography>
               </AccordionDetails>
             </Accordion>
           ))}
@@ -211,18 +214,18 @@ export default function HomePage() {
       {/* ===== FOOTER ===== */}
       <Box sx={{ bgcolor: '#000', borderTop: `1px solid ${C.border}`, py: 10, px: { xs: 2.5, md: 8 } }}>
         <Container maxWidth="lg" disableGutters>
-          <Grid container spacing={6}>
-            <Grid item xs={12} md={5}>
+          <Grid container spacing={6} justifyContent="center" textAlign={{ xs: 'center', md: 'left' }}>
+            <Grid size={{ xs: 12, md: 5 }}>
               <Typography fontWeight={700} sx={{ background: `linear-gradient(135deg, ${C.accent}, ${C.accent2})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: 2, mb: 2, fontSize: '1rem' }}>PC STORE</Typography>
-              <Typography variant="body2" sx={{ color: C.text3, lineHeight: 1.8, maxWidth: 280 }}>Plataforma de componentes de PC con validación inteligente de compatibilidad.</Typography>
+              <Typography variant="body2" sx={{ color: C.text3, lineHeight: 1.8, maxWidth: 280, mx: { xs: 'auto', md: 0 } }}>Plataforma de componentes de PC con validación inteligente de compatibilidad.</Typography>
             </Grid>
-            <Grid item xs={6} md={3}>
+            <Grid size={{ xs: 6, md: 3 }}>
               <Typography fontWeight={600} sx={{ color: C.text, mb: 2, fontSize: '0.85rem' }}>Enlaces</Typography>
               {['Catálogo', 'Ingresar', 'Registrarse'].map(l => (
                 <Typography key={l} variant="body2" sx={{ color: C.text3, mb: 1.5, cursor: 'pointer', fontSize: '0.85rem', '&:hover': { color: C.accent } }}>{l}</Typography>
               ))}
             </Grid>
-            <Grid item xs={6} md={4}>
+            <Grid size={{ xs: 6, md: 4 }}>
               <Typography fontWeight={600} sx={{ color: C.text, mb: 2, fontSize: '0.85rem' }}>Contacto</Typography>
               <Typography variant="body2" sx={{ color: C.text3, mb: 1, fontSize: '0.85rem' }}>contacto@pcstore.com</Typography>
               <Typography variant="body2" sx={{ color: C.text3, mb: 1, fontSize: '0.85rem' }}>+593 99 123 4567</Typography>
